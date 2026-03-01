@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo/Icon
+              // Logo/Image
               Container(
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
@@ -54,7 +54,22 @@ class _SplashScreenState extends State<SplashScreen> {
                     width: 2,
                   ),
                 ),
-                child: const Icon(Icons.people, size: 100, color: Colors.white),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to icon if image not found
+                      return const Icon(
+                        Icons.people,
+                        size: 100,
+                        color: Colors.white,
+                      );
+                    },
+                  ),
+                ),
               ),
               const SizedBox(height: 40),
 

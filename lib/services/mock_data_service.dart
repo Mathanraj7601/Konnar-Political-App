@@ -2,8 +2,8 @@ import 'dart:async';
 import '../models/citizen.dart';
 
 class MockDataService {
-  static List<Citizen> _registeredCitizens = [];
-  static Map<String, String> _userCredentials = {
+  static final List<Citizen> _registeredCitizens = [];
+  static final Map<String, String> _userCredentials = {
     '9876543210': 'password123', // mobile: password
     '9988776655': 'mypassword',
   };

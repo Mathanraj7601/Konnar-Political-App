@@ -33,9 +33,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PersonalDetailsScreen(
-                mobileNumber: _mobileController.text,
-              ),
+              builder: (context) =>
+                  PersonalDetailsScreen(mobileNumber: _mobileController.text),
             ),
           );
         } else if (mounted) {
@@ -82,9 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PersonalDetailsScreen(
-                mobileNumber: _mobileController.text,
-              ),
+              builder: (context) =>
+                  PersonalDetailsScreen(mobileNumber: _mobileController.text),
             ),
           );
         } else if (mounted) {
@@ -127,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 30),
-                
+
                 // Logo/Header
                 Container(
                   padding: const EdgeInsets.all(25),
@@ -142,10 +140,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.people,
-                    size: 60,
-                    color: Colors.white,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback to icon if image not found
+                        return const Icon(
+                          Icons.people,
+                          size: 60,
+                          color: Colors.white,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -161,13 +170,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 10),
-                
+
                 const Text(
                   'Makkal Munatra Kayagam',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 20, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
@@ -177,7 +183,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _mobileController,
                   decoration: InputDecoration(
                     labelText: 'Mobile Number',
-                    prefixIcon: const Icon(Icons.phone, color: Color(0xFF1A237E)),
+                    prefixIcon: const Icon(
+                      Icons.phone,
+                      color: Color(0xFF1A237E),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -189,7 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF1A237E),
+                        width: 2,
+                      ),
                     ),
                   ),
                   keyboardType: TextInputType.phone,
@@ -211,7 +223,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF1A237E)),
+                    prefixIcon: const Icon(
+                      Icons.lock,
+                      color: Color(0xFF1A237E),
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -223,7 +238,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF1A237E), width: 2),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF1A237E),
+                        width: 2,
+                      ),
                     ),
                   ),
                   validator: (value) {
@@ -243,8 +261,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: _isLoading 
-                        ? null 
+                    onPressed: _isLoading
+                        ? null
                         : (_isLoginMode ? _handleLogin : _handleRegister),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1A237E),
@@ -255,7 +273,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           )
                         : Text(
                             _isLoginMode ? 'Login' : 'Register',
@@ -277,8 +297,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                   child: Text(
-                    _isLoginMode 
-                        ? 'New user? Register here' 
+                    _isLoginMode
+                        ? 'New user? Register here'
                         : 'Already registered? Login here',
                     style: const TextStyle(
                       fontSize: 16,
