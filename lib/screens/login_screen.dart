@@ -1,6 +1,15 @@
-import 'package:flutter/material.dart';
-import 'personal_details_screen.dart';
-import '../services/mock_data_service.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:provider/provider.dart";
+
+import "../config/app_config.dart";
+import "../providers/auth_provider.dart";
+import "../theme/app_theme.dart";
+import "../widgets/alternating_word_text.dart";
+import "../widgets/app_text_field.dart";
+import "../widgets/primary_button.dart";
+import "otp_verification_screen.dart";
+import "registration_screen.dart";
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,332 +19,202 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _mobileController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _isLoginMode = true; // true for login, false for registration
+  final _mobileController = TextEditingController();
 
-  Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        final isValid = await MockDataService.validateLogin(
-          _mobileController.text,
-          _passwordController.text,
-        );
-
-        if (isValid && mounted) {
-          // Navigate to personal details screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  PersonalDetailsScreen(mobileNumber: _mobileController.text),
-            ),
-          );
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid mobile number or password'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    }
+  Future<void> _goToRegistration() async {
+    final mobile = _mobileController.text.trim();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RegistrationScreen(mobileNumber: mobile),
+      ),
+    );
   }
 
-  Future<void> _handleRegister() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      try {
-        final isRegistered = await MockDataService.registerUser(
-          _mobileController.text,
-          _passwordController.text,
-        );
-
-        if (isRegistered && mounted) {
-          // Navigate to personal details screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  PersonalDetailsScreen(mobileNumber: _mobileController.text),
-            ),
-          );
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Mobile number already registered'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
+  Future<void> _sendOtp() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+
+    final authProvider = context.read<AuthProvider>();
+    final mobile = _mobileController.text.trim();
+    final userExists = await authProvider.checkUserExists(mobile);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (userExists == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? "Unable to verify user"),
+        ),
+      );
+      return;
+    }
+
+    if (!userExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Mobile number not registered. Please use Register."),
+        ),
+      );
+      return;
+    }
+
+    final success = await authProvider.sendOtp(mobile);
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? "Failed to send OTP"),
+        ),
+      );
+      return;
+    }
+
+    final debugOtp = authProvider.debugOtp;
+
+    if (debugOtp != null && debugOtp.isNotEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OtpVerificationScreen(mobileNumber: mobile),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _mobileController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 30),
-
-                // Logo/Header
-                Container(
-                  padding: const EdgeInsets.all(25),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A237E),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/logo.png',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        // Fallback to icon if image not found
-                        return const Icon(
-                          Icons.people,
-                          size: 60,
-                          color: Colors.white,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // Title
-                const Text(
-                  'மகக்முனனேறகழகம்',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A237E),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-
-                const Text(
-                  'Makkal Munatra Kayagam',
-                  style: TextStyle(fontSize: 20, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-
-                // Mobile Number Field
-                TextFormField(
-                  controller: _mobileController,
-                  decoration: InputDecoration(
-                    labelText: 'Mobile Number',
-                    prefixIcon: const Icon(
-                      Icons.phone,
-                      color: Color(0xFF1A237E),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1A237E),
+                const SizedBox(height: 16),
+                Center(
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
                         width: 2,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter mobile number';
-                    }
-                    if (value.length != 10) {
-                      return 'Mobile number must be 10 digits';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(
-                      Icons.lock,
-                      color: Color(0xFF1A237E),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF1A237E),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 30),
-
-                // Action Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    onPressed: _isLoading
-                        ? null
-                        : (_isLoginMode ? _handleLogin : _handleRegister),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A237E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 5,
-                    ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          )
-                        : Text(
-                            _isLoginMode ? 'Login' : 'Register',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Toggle between Login/Register
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLoginMode = !_isLoginMode;
-                    });
-                  },
-                  child: Text(
-                    _isLoginMode
-                        ? 'New user? Register here'
-                        : 'Already registered? Login here',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF1A237E),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Demo Credentials Info
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange[200]!),
-                  ),
-                  child: const Column(
-                    children: [
-                      Text(
-                        'Demo Credentials:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
+                    child: ClipOval(
+                      child: Image.asset(
+                        AppConfig.profileImageAsset,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Theme.of(context).colorScheme.primary,
+                          child: const Icon(Icons.person, color: Colors.white),
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text('Mobile: 9876543210'),
-                      Text('Password: password123'),
-                      SizedBox(height: 8),
-                      Text('OR'),
-                      SizedBox(height: 8),
-                      Text('Mobile: 9988776655'),
-                      Text('Password: mypassword'),
-                    ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AlternatingWordText(
+                  text: AppConfig.partyName,
+                  firstColor: AppTheme.primary,
+                  secondColor: AppTheme.secondary,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                AlternatingWordText(
+                  text: "Member Login",
+                  firstColor: AppTheme.primary,
+                  secondColor: AppTheme.secondary,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.start,
+                ),
+                const SizedBox(height: 12),
+                AppTextField(
+                  controller: _mobileController,
+                  hintText: "Enter 10-digit mobile number",
+                  prefixIcon: Icons.phone_android,
+                  keyboardType: TextInputType.number,
+                  maxLength: 10,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    final input = value?.trim() ?? "";
+                    if (input.isEmpty) {
+                      return "Mobile number is required";
+                    }
+                    if (!RegExp(r"^\d{10}$").hasMatch(input)) {
+                      return "Enter a valid 10-digit mobile number";
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                PrimaryButton(
+                  label: "Send OTP",
+                  icon: Icons.sms_outlined,
+                  isLoading: authProvider.isLoading,
+                  onPressed: _sendOtp,
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: authProvider.isLoading ? null : _goToRegistration,
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: const Text("New user? Register"),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.secondary.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  child: Text(
+                    "Use a verified mobile number. OTP expires in 2 minutes.",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -344,12 +223,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _mobileController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
