@@ -59,8 +59,8 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
               children: [
                 const CircleAvatar(
                   radius: 44,
-                  backgroundColor: Color(0xFF1A237E),
-                  child: Icon(Icons.check, color: Color(0xFFFDD835), size: 48),
+                  backgroundColor: AppTheme.primary,
+                  child: Icon(Icons.check, color: AppTheme.secondary, size: 48),
                 ),
                 const SizedBox(height: 16),
                 const AlternatingWordText(

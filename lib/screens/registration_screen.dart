@@ -22,6 +22,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _nameController = TextEditingController();
   final _fatherNameController = TextEditingController();
   final _voterIdController = TextEditingController();
+  final _aadhaarController = TextEditingController();
   final _emailController = TextEditingController();
   String? _selectedGender;
 
@@ -112,6 +113,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     _nameController.dispose();
     _fatherNameController.dispose();
     _voterIdController.dispose();
+    _aadhaarController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -219,6 +221,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       return "Enter a valid voter ID";
                     }
 
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  controller: _aadhaarController,
+                  label: "Aadhaar Number",
+                  hintText: "Enter 12-digit Aadhaar number",
+                  prefixIcon: Icons.fingerprint,
+                  keyboardType: TextInputType.number,
+                  maxLength: 12,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) {
+                    final aadhaar = value?.trim() ?? "";
+                    if (aadhaar.isEmpty) {
+                      return "Aadhaar number is required";
+                    }
+                    if (!RegExp(r"^\d{12}$").hasMatch(aadhaar)) {
+                      return "Enter a valid 12-digit Aadhaar number";
+                    }
                     return null;
                   },
                 ),

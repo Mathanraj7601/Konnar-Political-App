@@ -1,6 +1,7 @@
 class AppConfig {
-  static const String partyName = "SS Nantha Konnar Political Party";
+  static const String partyName = "SS Nantha Konnar Porpadai";
   static const String profileImageAsset = "assets/logo.png";
+  static const String splashBackgroundAsset = "assets/splash_bg.png";
 
   static const bool useMockBackend = bool.fromEnvironment(
     "USE_MOCK_BACKEND",
@@ -45,4 +46,3 @@ class AppConfig {
   static const int splashSeconds = 3;
   static const int otpExpirySeconds = 120;
 }
-
