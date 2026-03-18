@@ -14,6 +14,7 @@ class AppTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool obscureText;
   final int maxLines;
+  final TextAlign textAlign;
 
   const AppTextField({
     super.key,
@@ -29,6 +30,7 @@ class AppTextField extends StatelessWidget {
     this.inputFormatters,
     this.obscureText = false,
     this.maxLines = 1,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -47,6 +49,7 @@ class AppTextField extends StatelessWidget {
       maxLines: maxLines,
       style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.w600),
       cursorColor: colorScheme.primary,
+      textAlign: textAlign,
       decoration: InputDecoration(
         labelText: (label == null || label!.isEmpty) ? null : label,
         hintText: hintText,

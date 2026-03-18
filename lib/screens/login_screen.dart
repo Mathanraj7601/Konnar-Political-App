@@ -32,17 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _sendOtp() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
     final mobile = _mobileController.text.trim();
     final userExists = await authProvider.checkUserExists(mobile);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (userExists == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,20 +49,19 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
+    // Navigate to registration if user doesn't exist
     if (!userExists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Mobile number not registered. Please use Register."),
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => RegistrationScreen(mobileNumber: mobile),
         ),
       );
       return;
     }
 
+    // User exists - proceed with OTP flow
     final success = await authProvider.sendOtp(mobile);
-
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final debugOtp = authProvider.debugOtp;
-
     if (debugOtp != null && debugOtp.isNotEmpty) {
       ScaffoldMessenger.of(
         context,
@@ -101,125 +95,287 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 16),
-                Center(
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                        width: 2,
+      backgroundColor: const Color(
+        0xFFF8FAFC,
+      ), // Very light modern slate-blue tinted background
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            // --- ENHANCED BACKGROUND DESIGN ---
+            Container(
+              height: size.height * 0.42,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primary,
+                    AppTheme.primary.withValues(alpha: 0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(50),
+                  bottomRight: Radius.circular(50),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+            ),
+            // Decorative Background Circles
+            Positioned(
+              top: -40,
+              right: -40,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 100,
+              left: -50,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+
+            // --- FOREGROUND CONTENT ---
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 10.0,
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+
+                    // Enhanced Profile Avatar with glowing borders
+                    Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          width: 2,
+                        ),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            AppConfig.profileImageAsset,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  color: AppTheme.secondary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: AppTheme.primary,
+                                    size: 50,
+                                  ),
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Title
+                    AlternatingWordText(
+                      text: AppConfig.partyName,
+                      firstColor: Colors.white,
+                      secondColor: AppTheme.secondary,
+                      style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Member Portal",
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // --- ENHANCED FLOATING FORM CARD ---
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.lock_person_rounded,
+                                    color: AppTheme.primary,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "Secure Login",
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Enter your registered mobile number to continue",
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            AppTextField(
+                              controller: _mobileController,
+                              label: "Mobile Number",
+                              hintText: "Enter 10-digit number",
+                              prefixIcon: Icons.phone_android_rounded,
+                              keyboardType: TextInputType.number,
+                              maxLength: 10,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              validator: (value) {
+                                final input = value?.trim() ?? "";
+                                if (input.isEmpty)
+                                  return "Mobile number is required";
+                                if (!RegExp(r"^\d{10}$").hasMatch(input))
+                                  return "Enter a valid 10-digit mobile number";
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 32),
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: PrimaryButton(
+                                label: "Send OTP",
+                                icon: Icons.arrow_forward_rounded,
+                                isLoading: authProvider.isLoading,
+                                onPressed: _sendOtp,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Don't have a member account? ",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: _goToRegistration,
+                                  child: const Text(
+                                    "Create New Member",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
+                    // Footer Security Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shield_rounded,
+                          size: 16,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "Secured by 256-bit encryption",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        AppConfig.profileImageAsset,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: Theme.of(context).colorScheme.primary,
-                          child: const Icon(Icons.person, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                AlternatingWordText(
-                  text: AppConfig.partyName,
-                  firstColor: AppTheme.primary,
-                  secondColor: AppTheme.secondary,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                AlternatingWordText(
-                  text: "Member Login",
-                  firstColor: AppTheme.primary,
-                  secondColor: AppTheme.secondary,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.start,
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _mobileController,
-                  hintText: "Enter 10-digit mobile number",
-                  prefixIcon: Icons.phone_android,
-                  keyboardType: TextInputType.number,
-                  maxLength: 10,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    final input = value?.trim() ?? "";
-                    if (input.isEmpty) {
-                      return "Mobile number is required";
-                    }
-                    if (!RegExp(r"^\d{10}$").hasMatch(input)) {
-                      return "Enter a valid 10-digit mobile number";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                PrimaryButton(
-                  label: "Send OTP",
-                  icon: Icons.sms_outlined,
-                  isLoading: authProvider.isLoading,
-                  onPressed: _sendOtp,
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: authProvider.isLoading ? null : _goToRegistration,
-                  icon: const Icon(Icons.person_add_alt_1_outlined),
-                  label: const Text("New user? Register"),
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.secondary.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.secondary.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  child: Text(
-                    "Use a verified mobile number. OTP expires in 2 minutes.",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -14,8 +14,7 @@ class RegistrationSuccessScreen extends StatefulWidget {
   const RegistrationSuccessScreen({super.key, required this.memberId});
 
   @override
-  State<RegistrationSuccessScreen> createState() =>
-      _RegistrationSuccessScreenState();
+  State<RegistrationSuccessScreen> createState() => _RegistrationSuccessScreenState();
 }
 
 class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
@@ -24,13 +23,8 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
   @override
   void initState() {
     super.initState();
-
-    _redirectTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) {
-        return;
-      }
-
-      _openMemberCard();
+    _redirectTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) _openMemberCard();
     });
   }
 
@@ -50,56 +44,105 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircleAvatar(
-                  radius: 44,
-                  backgroundColor: AppTheme.primary,
-                  child: Icon(Icons.check, color: AppTheme.secondary, size: 48),
+                // Glowing Checkmark Effect
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.green.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.green,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green,
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.check_rounded, color: Colors.white, size: 50),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
+                
                 const AlternatingWordText(
-                  text: "Registration Successful",
+                  text: "Registration Successful!",
                   firstColor: AppTheme.primary,
-                  secondColor: AppTheme.secondary,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  "Welcome to ${AppConfig.partyName}.",
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.75),
-                  ),
+                  secondColor: Colors.black87,
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                if (widget.memberId.isNotEmpty)
-                  Text(
-                    "Member ID: ${widget.memberId}",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                const SizedBox(height: 8),
+                
                 Text(
-                  "SMS confirmation has been triggered to your registered mobile number.",
+                  "Welcome to the ${AppConfig.partyName} family.",
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 18),
+                
+                if (widget.memberId.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Your Member ID",
+                          style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.memberId,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+                Text(
+                  "An SMS confirmation has been sent to your registered mobile number.",
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                  textAlign: TextAlign.center,
+                ),
+                
+                const SizedBox(height: 40),
                 PrimaryButton(
-                  label: "Open Member Card",
+                  label: "View Member Card",
+                  icon: Icons.credit_card_rounded,
                   onPressed: _openMemberCard,
                 ),
               ],

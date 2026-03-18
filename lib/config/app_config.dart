@@ -1,5 +1,5 @@
 class AppConfig {
-  static const String partyName = "SS Nantha Konnar Porpadai";
+  static const String partyName = "ஆயர் புரட்சி கழகம்";
   static const String profileImageAsset = "assets/logo.png";
   static const String splashBackgroundAsset = "assets/splash_bg.png";
 

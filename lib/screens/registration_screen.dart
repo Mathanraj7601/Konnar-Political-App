@@ -3,8 +3,6 @@ import "package:flutter/services.dart";
 import "package:provider/provider.dart";
 
 import "../providers/auth_provider.dart";
-import "../widgets/app_text_field.dart";
-import "../widgets/primary_button.dart";
 import "otp_verification_screen.dart";
 
 class RegistrationScreen extends StatefulWidget {
@@ -26,6 +24,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _emailController = TextEditingController();
   String? _selectedGender;
 
+  // Theme Colors - Matching Address Info Screen
+  final Color _blueTheme = const Color(0xFF1223B3); // Blue
+  final Color _yellowAccent = const Color(0xFFFFD100); // Yellow
+  final Color _bgOffWhite = const Color(
+    0xFFF6F4EE,
+  ); // Light Beige/Off-white background
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +38,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Future<void> _submitRegistration() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
     final mobile = _mobileController.text.trim();
@@ -46,9 +49,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       mobile: mobile,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (!registered) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -60,14 +61,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     final otpSent = await authProvider.sendOtp(mobile);
-
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (!otpSent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? "Failed to send OTP")),
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? "Failed to send OTP"),
+        ),
       );
       return;
     }
@@ -75,26 +75,35 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Text("Registration Completed Successfully!"),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 16),
+              Text(
+                "Registration Initialized!",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Routing to verification...",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       ),
     );
 
     await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (Navigator.of(context, rootNavigator: true).canPop()) {
       Navigator.of(context, rootNavigator: true).pop();
-    }
-
-    final debugOtp = authProvider.debugOtp;
-    if (debugOtp != null && debugOtp.isNotEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
     }
 
     Navigator.of(context).pushReplacement(
@@ -118,12 +127,63 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     super.dispose();
   }
 
+  // Helper to build fields matching the image style
+  Widget _buildFieldLayout(String label, Widget field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        field,
+      ],
+    );
+  }
+
+  InputDecoration _inputDeco({String? hintText, Widget? prefixIcon}) {
+    return InputDecoration(
+      hintText: hintText,
+      prefixIcon: prefixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: _blueTheme, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Register")),
+      backgroundColor: _bgOffWhite,
+      appBar: AppBar(
+        title: Text(
+          "Create Member Account",
+          style: TextStyle(fontWeight: FontWeight.bold, color: _blueTheme),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: _blueTheme,
+        elevation: 0,
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -132,146 +192,225 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppTextField(
-                  controller: _mobileController,
-                  label: "Mobile Number",
-                  hintText: "Enter 10-digit mobile number",
-                  prefixIcon: Icons.phone_android,
-                  keyboardType: TextInputType.number,
-                  maxLength: 10,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    final mobile = value?.trim() ?? "";
-                    if (mobile.isEmpty) {
-                      return "Mobile number is required";
-                    }
-                    if (!RegExp(r"^\d{10}$").hasMatch(mobile)) {
-                      return "Enter a valid 10-digit mobile number";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _nameController,
-                  label: "Full Name",
-                  prefixIcon: Icons.person,
-                  validator: (value) {
-                    final text = value?.trim() ?? "";
-                    if (text.length < 3) {
-                      return "Name is required";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _fatherNameController,
-                  label: "Father Name",
-                  prefixIcon: Icons.badge_outlined,
-                  validator: (value) {
-                    final text = value?.trim() ?? "";
-                    if (text.length < 3) {
-                      return "Father name is required";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedGender,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: "Gender",
-                    prefixIcon: Icon(Icons.wc),
+                Text(
+                  "Become a Member",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: _blueTheme,
                   ),
-                  items: const ["Male", "Female", "Other"]
-                      .map(
-                        (gender) => DropdownMenuItem<String>(
-                          value: gender,
-                          child: Text(gender),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Gender is required";
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _voterIdController,
-                  label: "Voter ID",
-                  hintText: "Enter voter ID",
-                  prefixIcon: Icons.badge,
-                  validator: (value) {
-                    final voterId = value?.trim() ?? "";
-                    if (voterId.isEmpty) {
-                      return "Voter ID is required";
-                    }
-
-                    if (!RegExp(r"^[A-Za-z0-9]{6,20}$").hasMatch(voterId)) {
-                      return "Enter a valid voter ID";
-                    }
-
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _aadhaarController,
-                  label: "Aadhaar Number",
-                  hintText: "Enter 12-digit Aadhaar number",
-                  prefixIcon: Icons.fingerprint,
-                  keyboardType: TextInputType.number,
-                  maxLength: 12,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    final aadhaar = value?.trim() ?? "";
-                    if (aadhaar.isEmpty) {
-                      return "Aadhaar number is required";
-                    }
-                    if (!RegExp(r"^\d{12}$").hasMatch(aadhaar)) {
-                      return "Enter a valid 12-digit Aadhaar number";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _emailController,
-                  label: "Email",
-                  hintText: "Optional",
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    final email = value?.trim() ?? "";
-
-                    if (email.isEmpty) {
-                      return null;
-                    }
-
-                    const pattern = r"^[^\s@]+@[^\s@]+\.[^\s@]+$";
-                    if (!RegExp(pattern).hasMatch(email)) {
-                      return "Enter a valid email";
-                    }
-
-                    return null;
-                  },
+                const Text(
+                  "உறுப்பினர் பதிவு",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 const SizedBox(height: 24),
-                PrimaryButton(
-                  label: "Submit & Get OTP",
-                  icon: Icons.sms_outlined,
-                  isLoading: authProvider.isLoading,
-                  onPressed: _submitRegistration,
+
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildFieldLayout(
+                        "Mobile Number",
+                        TextFormField(
+                          controller: _mobileController,
+                          keyboardType: TextInputType.number,
+                          maxLength: 10,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: _inputDeco(
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.phone_android,
+                                    color: Colors.grey.shade500,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    "+91",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    height: 20,
+                                    width: 1,
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          validator: (val) {
+                            if ((val?.trim() ?? "").isEmpty) return "Required";
+                            if (!RegExp(r"^\d{10}$").hasMatch(val!))
+                              return "Invalid 10-digit number";
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      _buildFieldLayout(
+                        "Full Name",
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: _inputDeco(
+                            prefixIcon: const Icon(Icons.person_outline),
+                          ),
+                          validator: (val) => (val?.trim() ?? "").length < 3
+                              ? "Name required"
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildFieldLayout(
+                        "Father's Name",
+                        TextFormField(
+                          controller: _fatherNameController,
+                          decoration: _inputDeco(
+                            prefixIcon: const Icon(Icons.badge_outlined),
+                          ),
+                          validator: (val) => (val?.trim() ?? "").length < 3
+                              ? "Required"
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildFieldLayout(
+                        "Email (Optional)",
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: _inputDeco(
+                            hintText: "name@example.com",
+                            prefixIcon: const Icon(Icons.email_outlined),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildFieldLayout(
+                              "Gender",
+                              DropdownButtonFormField<String>(
+                                value: _selectedGender,
+                                decoration: _inputDeco(),
+                                items: const ["Male", "Female", "Other"]
+                                    .map(
+                                      (g) => DropdownMenuItem(
+                                        value: g,
+                                        child: Text(g),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (val) =>
+                                    setState(() => _selectedGender = val),
+                                validator: (val) =>
+                                    val == null ? "Required" : null,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildFieldLayout(
+                              "Voter ID",
+                              TextFormField(
+                                controller: _voterIdController,
+                                decoration: _inputDeco(),
+                                validator: (val) => (val?.trim() ?? "").isEmpty
+                                    ? "Required"
+                                    : null,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildFieldLayout(
+                        "Aadhaar Number",
+                        TextFormField(
+                          controller: _aadhaarController,
+                          keyboardType: TextInputType.number,
+                          maxLength: 12,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: _inputDeco(
+                            prefixIcon: const Icon(Icons.fingerprint),
+                          ),
+                          validator: (val) => (val?.trim() ?? "").length != 12
+                              ? "Invalid Aadhaar"
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: authProvider.isLoading
+                        ? null
+                        : _submitRegistration,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _blueTheme,
+                      foregroundColor: _yellowAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: authProvider.isLoading
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: _yellowAccent,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Submit & Get OTP",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
                 ),
               ],
             ),

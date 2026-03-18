@@ -1,5 +1,5 @@
 name: flutter_application_1
-description: "SS Nantha Konnar Porpadai  Registration App"
+description: "APK"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -32,7 +32,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/logo.png"
+  image_path: "assets/flag.png"
   remove_alpha_ios: true
   web:
     generate: true

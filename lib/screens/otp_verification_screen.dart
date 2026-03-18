@@ -6,10 +6,6 @@ import "package:provider/provider.dart";
 
 import "../config/app_config.dart";
 import "../providers/auth_provider.dart";
-import "../theme/app_theme.dart";
-import "../widgets/alternating_word_text.dart";
-import "../widgets/app_text_field.dart";
-import "../widgets/primary_button.dart";
 import "member_card_screen.dart";
 import "personal_info_screen.dart";
 
@@ -30,14 +26,27 @@ class OtpVerificationScreen extends StatefulWidget {
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _otpController = TextEditingController();
+  final FocusNode _otpFocusNode = FocusNode();
 
   Timer? _timer;
   int _remainingSeconds = AppConfig.otpExpirySeconds;
+
+  // Exact Colors from your previous yellow theme mockup
+  final Color _yellowTheme = const Color(0xFFFFBF43);
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+    // Add listener to update custom OTP boxes when user types
+    _otpController.addListener(() {
+      if (mounted) setState(() {});
+    });
+    
+    // Auto-focus the OTP field when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(_otpFocusNode);
+    });
   }
 
   void _startTimer() {
@@ -47,19 +56,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds <= 1) {
         timer.cancel();
-        if (mounted) {
-          setState(() {
-            _remainingSeconds = 0;
-          });
-        }
+        if (mounted) setState(() => _remainingSeconds = 0);
         return;
       }
-
-      if (mounted) {
-        setState(() {
-          _remainingSeconds -= 1;
-        });
-      }
+      if (mounted) setState(() => _remainingSeconds -= 1);
     });
   }
 
@@ -70,25 +70,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _verifyOtp() async {
-    if (!_formKey.currentState!.validate()) {
+    final otpText = _otpController.text.trim();
+    if (otpText.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid 6-digit OTP")),
+      );
       return;
     }
 
     final authProvider = context.read<AuthProvider>();
     final response = await authProvider.verifyOtp(
       mobile: widget.mobileNumber,
-      otp: _otpController.text.trim(),
+      otp: otpText,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (response == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? "OTP verification failed"),
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? "OTP verification failed")),
       );
       return;
     }
@@ -115,26 +115,22 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.sendOtp(widget.mobileNumber);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? "Could not resend OTP"),
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? "Could not resend OTP")),
       );
       return;
     }
 
+    _otpController.clear();
     _startTimer();
+    FocusScope.of(context).requestFocus(_otpFocusNode);
 
     final debugOtp = authProvider.debugOtp;
     if (debugOtp != null && debugOtp.isNotEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
     }
   }
 
@@ -142,81 +138,215 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void dispose() {
     _timer?.cancel();
     _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
+  }
+
+  // Custom widget to draw each digit box
+  Widget _buildOtpBox(int index) {
+    final text = _otpController.text;
+    final isFocused = _otpFocusNode.hasFocus && text.length == index;
+    final hasData = text.length > index;
+    final digit = hasData ? text[index] : "";
+
+    return Container(
+      width: 48,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isFocused 
+              ? Colors.black87 
+              : hasData 
+                  ? Colors.grey.shade500 
+                  : Colors.grey.shade300,
+          width: isFocused ? 2 : 1.5,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        digit,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: Colors.black87,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final isExpired = _remainingSeconds == 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("OTP Verification")),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false, // We will build a custom back button
+        title: GestureDetector(
+          onTap: () => Navigator.of(context).pop(),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.arrow_back_ios_new_rounded, color: Colors.grey.shade500, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                "Go Back",
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const AlternatingWordText(
-                  text: "Enter OTP",
-                  firstColor: AppTheme.primary,
-                  secondColor: AppTheme.secondary,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "Sent to +91 ${widget.mobileNumber}",
+                const SizedBox(height: 20),
+                
+                // --- TITLES ---
+                const Text(
+                  "Check your phone",
                   style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.75),
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 18),
-                AppTextField(
-                  controller: _otpController,
-                  label: "6-digit OTP",
-                  prefixIcon: Icons.password,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    final input = value?.trim() ?? "";
-                    if (!RegExp(r"^\d{6}$").hasMatch(input)) {
-                      return "Enter a valid 6-digit OTP";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
                 Text(
-                  _remainingSeconds > 0
-                      ? "OTP expires in ${_formatTimer(_remainingSeconds)}"
-                      : "OTP expired",
+                  "We've sent the code to +91 ${widget.mobileNumber}",
                   style: TextStyle(
-                    color: _remainingSeconds > 0
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.75)
-                        : Colors.red.shade700,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // --- CUSTOM OTP BOXES ---
+                SizedBox(
+                  height: 60,
+                  child: Stack(
+                    children: [
+                      // Invisible TextField to handle actual keyboard input
+                      Positioned.fill(
+                        child: Opacity(
+                          opacity: 0,
+                          child: TextField(
+                            controller: _otpController,
+                            focusNode: _otpFocusNode,
+                            keyboardType: TextInputType.number,
+                            maxLength: 6,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            decoration: const InputDecoration(counterText: ""),
+                            showCursor: false,
+                          ),
+                        ),
+                      ),
+                      // Visual Overlay for the boxes
+                      IgnorePointer(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: List.generate(6, (index) => _buildOtpBox(index)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // --- TIMER TEXT ---
+                RichText(
+                  text: TextSpan(
+                    text: isExpired ? "Code expired " : "Code expires in: ",
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: isExpired ? "Please resend" : _formatTimer(_remainingSeconds),
+                        style: TextStyle(
+                          color: isExpired ? Colors.red.shade600 : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // --- BUTTONS ---
+                // Verify Button (Yellow Pill)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: authProvider.isLoading ? null : _verifyOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _yellowTheme,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: authProvider.isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Verify",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                PrimaryButton(
-                  label: "Verify OTP",
-                  icon: Icons.verified_user,
-                  isLoading: authProvider.isLoading,
-                  onPressed: _verifyOtp,
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: _remainingSeconds == 0 && !authProvider.isLoading
-                      ? _resendOtp
-                      : null,
-                  child: const Text("Resend OTP"),
+                
+                // Send Again Button (Outlined Pill)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: isExpired && !authProvider.isLoading ? _resendOtp : null,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      side: BorderSide(
+                        color: isExpired ? Colors.grey.shade400 : Colors.grey.shade200,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      "Send again",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isExpired ? Colors.black87 : Colors.grey.shade400,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

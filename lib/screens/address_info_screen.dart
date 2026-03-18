@@ -6,8 +6,6 @@ import "../data/tamil_nadu_electoral_data.dart";
 import "../models/registration_draft.dart";
 import "../models/registration_request.dart";
 import "../providers/auth_provider.dart";
-import "../widgets/app_text_field.dart";
-import "../widgets/primary_button.dart";
 import "login_screen.dart";
 import "registration_success_screen.dart";
 
@@ -29,6 +27,13 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
   String? _selectedDistrict;
   String? _selectedConstituency;
 
+  // Exact Colors from Mockup
+  final Color _blueTheme = const Color(0xFF1223B3); // Blue
+  final Color _yellowAccent = const Color(0xFFFFD100); // Yellow
+  final Color _bgOffWhite = const Color(
+    0xFFF6F4EE,
+  ); // Light Beige/Off-white background
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -36,7 +41,9 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
 
     if (_selectedDistrict == null || _selectedConstituency == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select district and constituency")),
+        const SnackBar(
+          content: Text("Please select district and constituency"),
+        ),
       );
       return;
     }
@@ -45,9 +52,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
     final verificationToken = authProvider.registrationVerificationToken;
 
     if (verificationToken == null || verificationToken.isEmpty) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -77,9 +82,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
     authProvider.setProfileImagePath(widget.draft.profileImagePath);
     final success = await authProvider.registerMember(request);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -108,183 +111,419 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
     super.dispose();
   }
 
+  // Helper to build the bold labels above fields
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  // Helper to generate the pill-shaped input decoration
+  InputDecoration _pillDecoration({String? hintText, IconData? suffixIcon}) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+      suffixIcon: suffixIcon != null
+          ? Icon(suffixIcon, color: Colors.grey.shade400, size: 20)
+          : null,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: BorderSide(color: _blueTheme, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(30),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final size = MediaQuery.of(context).size;
+
     final constituencyOptions = _selectedDistrict == null
         ? const <String>[]
         : TamilNaduElectoralData.constituenciesForDistrict(_selectedDistrict!);
-    final showStateWideFallback = _selectedDistrict != null &&
+    final showStateWideFallback =
+        _selectedDistrict != null &&
         !TamilNaduElectoralData.hasSpecificDistrictMapping(_selectedDistrict!);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Step 2: Address Info")),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Address details",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _streetController,
-                  label: "Street",
-                  prefixIcon: Icons.location_on,
-                  validator: (value) {
-                    if ((value ?? "").trim().length < 3) {
-                      return "Street is required";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _doorNumberController,
-                  label: "Door Number",
-                  prefixIcon: Icons.home,
-                  validator: (value) {
-                    if ((value ?? "").trim().isEmpty) {
-                      return "Door number is required";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _villageController,
-                  label: "Village / City",
-                  prefixIcon: Icons.location_city,
-                  validator: (value) {
-                    if ((value ?? "").trim().length < 2) {
-                      return "Village / City is required";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  readOnly: true,
-                  initialValue: TamilNaduElectoralData.state,
-                  decoration: const InputDecoration(
-                    labelText: "State",
-                    prefixIcon: Icon(Icons.flag),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedDistrict,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: "District",
-                    prefixIcon: Icon(Icons.location_city),
-                  ),
-                  items: TamilNaduElectoralData.districts
-                      .map(
-                        (district) => DropdownMenuItem(
-                          value: district,
-                          child: Text(district),
-                        ),
-                      )
-                      .toList(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "District is required";
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedDistrict = value;
-                      _selectedConstituency = null;
-                    });
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: constituencyOptions.contains(_selectedConstituency)
-                      ? _selectedConstituency
-                      : null,
-                  isExpanded: true,
-                  decoration: const InputDecoration(
-                    labelText: "Constituency",
-                    prefixIcon: Icon(Icons.account_balance),
-                  ),
-                  items: constituencyOptions
-                      .map(
-                        (constituency) => DropdownMenuItem(
-                          value: constituency,
-                          child: Text(constituency),
-                        ),
-                      )
-                      .toList(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "Constituency is required";
-                    }
-                    return null;
-                  },
-                  onChanged: _selectedDistrict == null
-                      ? null
-                      : (value) {
-                          setState(() {
-                            _selectedConstituency = value;
-                          });
-                        },
-                ),
-                if (_selectedDistrict == null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    "Select district first to load constituencies.",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary.withValues(
-                            alpha: 0.75,
-                          ),
-                    ),
-                  ),
-                ],
-                if (showStateWideFallback) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    "Showing full Tamil Nadu constituency list for this district.",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary.withValues(
-                            alpha: 0.75,
-                          ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 12),
-                AppTextField(
-                  controller: _pincodeController,
-                  label: "Pincode",
-                  prefixIcon: Icons.pin_drop,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (!RegExp(r"^\d{6}$").hasMatch((value ?? "").trim())) {
-                      return "Enter valid 6-digit pincode";
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                PrimaryButton(
-                  label: "Submit Registration",
-                  icon: Icons.check_circle,
-                  isLoading: authProvider.isLoading,
-                  onPressed: _submit,
-                ),
-              ],
+      backgroundColor: _bgOffWhite, // Off-white background from mockup
+      body: Stack(
+        children: [
+          // TOP BLUE BACKGROUND WITH YELLOW ACCENT
+          Container(
+            height: size.height * 0.45,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [_blueTheme, _blueTheme.withValues(alpha: 0.85)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
           ),
-        ),
+
+          // SCROLLABLE CONTENT
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  // HEADER TEXT
+                  const Text(
+                    "Address Info",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Complete Registration",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color.fromARGB(221, 255, 255, 255),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // WHITE FORM CARD
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Card Header
+                          const Center(
+                            child: Text(
+                              "Location Details",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Center(
+                            child: Text(
+                              "Please provide your residential address details for electoral mapping.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+
+                          // Street Field
+                          _buildLabel("Street Name"),
+                          TextFormField(
+                            controller: _streetController,
+                            decoration: _pillDecoration(
+                              hintText: "Enter street name",
+                              suffixIcon: Icons.location_on,
+                            ),
+                            validator: (value) =>
+                                (value ?? "").trim().length < 3
+                                ? "Street is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Side-by-Side: Door Number & Pincode (To match mockup layout)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildLabel("Door No."),
+                                    TextFormField(
+                                      controller: _doorNumberController,
+                                      decoration: _pillDecoration(
+                                        hintText: "No.",
+                                      ),
+                                      validator: (value) =>
+                                          (value ?? "").trim().isEmpty
+                                          ? "Required"
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildLabel("Pincode"),
+                                    TextFormField(
+                                      controller: _pincodeController,
+                                      keyboardType: TextInputType.number,
+                                      maxLength: 6,
+                                      decoration: _pillDecoration(
+                                        hintText: "6 digits",
+                                      ).copyWith(counterText: ""),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      validator: (value) =>
+                                          !RegExp(
+                                            r"^\d{6}$",
+                                          ).hasMatch((value ?? "").trim())
+                                          ? "Invalid"
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Village Field
+                          _buildLabel("Village / City"),
+                          TextFormField(
+                            controller: _villageController,
+                            decoration: _pillDecoration(
+                              hintText: "Enter village or city",
+                              suffixIcon: Icons.location_city,
+                            ),
+                            validator: (value) =>
+                                (value ?? "").trim().length < 2
+                                ? "Village / City is required"
+                                : null,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // District Dropdown
+                          _buildLabel("District"),
+                          DropdownButtonFormField<String>(
+                            value: _selectedDistrict,
+                            isExpanded: true,
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.grey.shade400,
+                            ),
+                            decoration: _pillDecoration(),
+                            hint: Text(
+                              "Select District",
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 14,
+                              ),
+                            ),
+                            items: TamilNaduElectoralData.districts
+                                .map(
+                                  (district) => DropdownMenuItem(
+                                    value: district,
+                                    child: Text(district),
+                                  ),
+                                )
+                                .toList(),
+                            validator: (value) => value == null || value.isEmpty
+                                ? "District is required"
+                                : null,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedDistrict = value;
+                                _selectedConstituency = null;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Constituency Dropdown
+                          _buildLabel("Constituency"),
+                          DropdownButtonFormField<String>(
+                            value:
+                                constituencyOptions.contains(
+                                  _selectedConstituency,
+                                )
+                                ? _selectedConstituency
+                                : null,
+                            isExpanded: true,
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.grey.shade400,
+                            ),
+                            decoration: _pillDecoration(),
+                            hint: Text(
+                              "Select Constituency",
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 14,
+                              ),
+                            ),
+                            items: constituencyOptions
+                                .map(
+                                  (constituency) => DropdownMenuItem(
+                                    value: constituency,
+                                    child: Text(constituency),
+                                  ),
+                                )
+                                .toList(),
+                            validator: (value) => value == null || value.isEmpty
+                                ? "Constituency is required"
+                                : null,
+                            onChanged: _selectedDistrict == null
+                                ? null
+                                : (value) {
+                                    setState(
+                                      () => _selectedConstituency = value,
+                                    );
+                                  },
+                          ),
+
+                          if (_selectedDistrict == null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 8),
+                              child: Text(
+                                "Select district first to load constituencies.",
+                                style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          if (showStateWideFallback)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 8),
+                              child: Text(
+                                "Showing full Tamil Nadu constituency list.",
+                                style: TextStyle(
+                                  color: Colors.orange.shade700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+
+                          // State Field (Read-only)
+                          _buildLabel("State"),
+                          TextFormField(
+                            readOnly: true,
+                            initialValue: TamilNaduElectoralData.state,
+                            style: TextStyle(color: Colors.grey.shade600),
+                            decoration: _pillDecoration(
+                              suffixIcon: Icons.flag,
+                            ).copyWith(fillColor: Colors.grey.shade50),
+                          ),
+                          const SizedBox(height: 30),
+
+                          // SAVE & CONTINUE BUTTON (Blue Pill)
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _blueTheme,
+                                foregroundColor: _yellowAccent,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: authProvider.isLoading
+                                  ? SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: _yellowAccent,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      "Save & Continue",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // BACK TO LOGIN TEXT BUTTON
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
+                                  (route) => false,
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.black87,
+                              ),
+                              child: const Text(
+                                "Back to Login",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
