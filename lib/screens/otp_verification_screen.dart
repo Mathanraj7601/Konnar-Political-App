@@ -6,7 +6,8 @@ import "package:provider/provider.dart";
 
 import "../config/app_config.dart";
 import "../providers/auth_provider.dart";
-import "member_card_screen.dart";
+import "../providers/language_provider.dart";
+import "home_screen.dart";
 import "personal_info_screen.dart";
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -70,10 +71,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _verifyOtp() async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     final otpText = _otpController.text.trim();
     if (otpText.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid 6-digit OTP")),
+        SnackBar(content: Text(isTamil ? "சரியான 6-இலக்க OTP-ஐ உள்ளிடவும்" : "Please enter a valid 6-digit OTP")),
       );
       return;
     }
@@ -88,7 +90,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     if (response == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? "OTP verification failed")),
+        SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "OTP சரிபார்ப்பு தோல்வியடைந்தது" : "OTP verification failed"))),
       );
       return;
     }
@@ -106,12 +108,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
 
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MemberCardScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
   }
 
   Future<void> _resendOtp() async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     final authProvider = context.read<AuthProvider>();
     final success = await authProvider.sendOtp(widget.mobileNumber);
 
@@ -119,7 +122,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? "Could not resend OTP")),
+        SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "OTP-ஐ மீண்டும் அனுப்ப முடியவில்லை" : "Could not resend OTP"))),
       );
       return;
     }
@@ -130,7 +133,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     final debugOtp = authProvider.debugOtp;
     if (debugOtp != null && debugOtp.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isTamil ? "மாதிரி OTP: $debugOtp" : "Demo OTP: $debugOtp")));
     }
   }
 
@@ -179,6 +182,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final langProvider = context.watch<LanguageProvider>();
+    final isTamil = langProvider.isTamil;
     final isExpired = _remainingSeconds == 0;
 
     return Scaffold(
@@ -195,7 +200,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               Icon(Icons.arrow_back_ios_new_rounded, color: Colors.grey.shade500, size: 18),
               const SizedBox(width: 4),
               Text(
-                "Go Back",
+                isTamil ? "பின்செல்க" : "Go Back",
                 style: TextStyle(
                   color: Colors.grey.shade600,
                   fontSize: 16,
@@ -217,9 +222,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const SizedBox(height: 20),
                 
                 // --- TITLES ---
-                const Text(
-                  "Check your phone",
-                  style: TextStyle(
+                Text(
+                  isTamil ? "உங்கள் அலைபேசியைச் சரிபார்க்கவும்" : "Check your phone",
+                  style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
                     color: Colors.black87,
@@ -227,7 +232,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "We've sent the code to +91 ${widget.mobileNumber}",
+                  isTamil ? "+91 ${widget.mobileNumber} எண்ணிற்கு குறியீட்டை அனுப்பியுள்ளோம்" : "We've sent the code to +91 ${widget.mobileNumber}",
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -271,7 +276,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 // --- TIMER TEXT ---
                 RichText(
                   text: TextSpan(
-                    text: isExpired ? "Code expired " : "Code expires in: ",
+                    text: isExpired ? (isTamil ? "குறியீடு காலாவதியானது " : "Code expired ") : (isTamil ? "குறியீடு காலாவதியாகும் நேரம்: " : "Code expires in: "),
                     style: TextStyle(
                       color: Colors.grey.shade600,
                       fontSize: 14,
@@ -279,7 +284,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                     children: [
                       TextSpan(
-                        text: isExpired ? "Please resend" : _formatTimer(_remainingSeconds),
+                        text: isExpired ? (isTamil ? "மீண்டும் அனுப்பவும்" : "Please resend") : _formatTimer(_remainingSeconds),
                         style: TextStyle(
                           color: isExpired ? Colors.red.shade600 : Colors.black87,
                           fontWeight: FontWeight.bold,
@@ -311,9 +316,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             width: 20,
                             child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
                           )
-                        : const Text(
-                            "Verify",
-                            style: TextStyle(
+                        : Text(
+                            isTamil ? "சரிபார்" : "Verify",
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -339,7 +344,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       ),
                     ),
                     child: Text(
-                      "Send again",
+                      isTamil ? "மீண்டும் அனுப்பு" : "Send again",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

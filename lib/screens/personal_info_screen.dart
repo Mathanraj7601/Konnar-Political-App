@@ -6,6 +6,7 @@ import "package:provider/provider.dart";
 
 import "../models/registration_draft.dart";
 import "../providers/auth_provider.dart";
+import "../providers/language_provider.dart";
 import "../utils/age_utils.dart";
 import "address_info_screen.dart";
 import "login_screen.dart";
@@ -78,6 +79,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   }
 
   Future<void> _pickProfileImage(ImageSource source) async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     try {
       final selectedImage = await _imagePicker.pickImage(
         source: source,
@@ -98,16 +100,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+      ).showSnackBar(SnackBar(content: Text(isTamil ? 'படம் தேர்ந்தெடுப்பதில் பிழை: $e' : 'Error picking image: $e')));
     }
   }
 
   void _next() {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedDob == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select date of birth")),
+        SnackBar(content: Text(isTamil ? "பிறந்த தேதியை தேர்ந்தெடுக்கவும்" : "Please select date of birth")),
       );
       return;
     }
@@ -115,14 +118,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     final age = int.tryParse(_ageController.text) ?? 0;
     if (age < 18) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Member must be at least 18 years old")),
+        SnackBar(content: Text(isTamil ? "உறுப்பினருக்கு குறைந்தபட்சம் 18 வயது இருக்க வேண்டும்" : "Member must be at least 18 years old")),
       );
       return;
     }
 
     if (_profileImagePath == null || _profileImagePath!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please upload profile photo")),
+        SnackBar(content: Text(isTamil ? "சுயவிவர புகைப்படத்தை பதிவேற்றவும்" : "Please upload profile photo")),
       );
       return;
     }
@@ -189,17 +192,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AuthProvider>();
+    final isTamil = context.watch<LanguageProvider>().isTamil;
 
     if (provider.registrationVerificationToken == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Session Expired")),
+        appBar: AppBar(title: Text(isTamil ? "அமர்வு முடிந்தது" : "Session Expired")),
         body: Center(
           child: ElevatedButton(
             onPressed: () => Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const LoginScreen()),
               (r) => false,
             ),
-            child: const Text("Back to Login"),
+            child: Text(isTamil ? "உள்நுழையவும்" : "Back to Login"),
           ),
         ),
       );
@@ -209,7 +213,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       backgroundColor: _bgOffWhite,
       appBar: AppBar(
         title: Text(
-          "Step 1: Personal Info",
+          isTamil ? "படி 1: தனிப்பட்ட விவரங்கள்" : "Step 1: Personal Info",
           style: TextStyle(fontWeight: FontWeight.bold, color: _blueTheme),
         ),
         backgroundColor: Colors.white,
@@ -226,19 +230,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Member Details",
+                  isTamil ? "உறுப்பினர் விவரங்கள்" : "Member Details",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: _blueTheme,
-                  ),
-                ),
-                const Text(
-                  "உறுப்பினர் விவரங்கள்",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -260,9 +256,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Photo Upload Section (Matching Image exactly)
-                      const Text(
-                        "Upload Photo",
-                        style: TextStyle(
+                      Text(
+                        isTamil ? "புகைப்படம் பதிவேற்றவும்" : "Upload Photo",
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
@@ -354,9 +350,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                       color: Colors.white,
                                       size: 18,
                                     ),
-                                    label: const Text(
-                                      "Take Photo",
-                                      style: TextStyle(color: Colors.white),
+                                    label: Text(
+                                      isTamil ? "புகைப்படம் எடு" : "Take Photo",
+                                      style: const TextStyle(color: Colors.white),
                                     ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: _blueTheme,
@@ -380,9 +376,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                       color: Colors.black87,
                                       size: 18,
                                     ),
-                                    label: const Text(
-                                      "Gallery",
-                                      style: TextStyle(color: Colors.black87),
+                                    label: Text(
+                                      isTamil ? "கேலரி" : "Gallery",
+                                      style: const TextStyle(color: Colors.black87),
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
@@ -406,7 +402,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
                       // Rest of Personal Info
                       _buildFieldLayout(
-                        "Mobile Number",
+                        isTamil ? "அலைபேசி எண்" : "Mobile Number",
                         TextFormField(
                           initialValue: widget.mobileNumber,
                           readOnly: true,
@@ -416,12 +412,12 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                       const SizedBox(height: 16),
 
                       _buildFieldLayout(
-                        "Full Name",
+                        isTamil ? "முழு பெயர்" : "Full Name",
                         TextFormField(
                           controller: _nameController,
                           decoration: _inputDeco(),
                           validator: (val) => (val?.trim() ?? "").length < 3
-                              ? "Required"
+                              ? (isTamil ? "தேவை" : "Required")
                               : null,
                         ),
                       ),
@@ -432,7 +428,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           Expanded(
                             flex: 2,
                             child: _buildFieldLayout(
-                              "Date of Birth",
+                              isTamil ? "பிறந்த தேதி" : "Date of Birth",
                               TextFormField(
                                 controller: _dobController,
                                 readOnly: true,
@@ -445,7 +441,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                   ),
                                 ),
                                 validator: (val) =>
-                                    (val ?? "").isEmpty ? "Required" : null,
+                                    (val ?? "").isEmpty ? (isTamil ? "தேவை" : "Required") : null,
                               ),
                             ),
                           ),
@@ -453,7 +449,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           Expanded(
                             flex: 1,
                             child: _buildFieldLayout(
-                              "Age",
+                              isTamil ? "வயது" : "Age",
                               TextFormField(
                                 controller: _ageController,
                                 readOnly: true,
@@ -489,9 +485,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
-                            "Continue to Address",
-                            style: TextStyle(
+                        : Text(
+                            isTamil ? "முகவரிக்குத் தொடரவும்" : "Continue to Address",
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),

@@ -6,6 +6,7 @@ import "../data/tamil_nadu_electoral_data.dart";
 import "../models/registration_draft.dart";
 import "../models/registration_request.dart";
 import "../providers/auth_provider.dart";
+import "../providers/language_provider.dart";
 import "login_screen.dart";
 import "registration_success_screen.dart";
 
@@ -35,14 +36,15 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
   ); // Light Beige/Off-white background
 
   Future<void> _submit() async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     if (_selectedDistrict == null || _selectedConstituency == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please select district and constituency"),
+        SnackBar(
+          content: Text(isTamil ? "மாவட்டம் மற்றும் தொகுதியை தேர்ந்தெடுக்கவும்" : "Please select district and constituency"),
         ),
       );
       return;
@@ -55,8 +57,8 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("OTP verification expired. Please login again."),
+        SnackBar(
+          content: Text(isTamil ? "OTP சரிபார்ப்பு காலாவதியானது. மீண்டும் உள்நுழையவும்." : "OTP verification expired. Please login again."),
         ),
       );
 
@@ -87,7 +89,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage ?? "Registration failed"),
+          content: Text(authProvider.errorMessage ?? (isTamil ? "பதிவு தோல்வியடைந்தது" : "Registration failed")),
         ),
       );
       return;
@@ -159,6 +161,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final isTamil = context.watch<LanguageProvider>().isTamil;
     final size = MediaQuery.of(context).size;
 
     final constituencyOptions = _selectedDistrict == null
@@ -192,9 +195,9 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                 children: [
                   const SizedBox(height: 30),
                   // HEADER TEXT
-                  const Text(
-                    "Address Info",
-                    style: TextStyle(
+                  Text(
+                    isTamil ? "முகவரி விவரங்கள்" : "Address Info",
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.w900,
                       color: Color.fromARGB(255, 255, 255, 255),
@@ -202,9 +205,9 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    "Complete Registration",
-                    style: TextStyle(
+                  Text(
+                    isTamil ? "பதிவை முடிக்கவும்" : "Complete Registration",
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Color.fromARGB(221, 255, 255, 255),
@@ -233,10 +236,10 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Card Header
-                          const Center(
+                          Center(
                             child: Text(
-                              "Location Details",
-                              style: TextStyle(
+                              isTamil ? "இட விவரங்கள்" : "Location Details",
+                              style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 color: Colors.black,
@@ -246,7 +249,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           const SizedBox(height: 8),
                           Center(
                             child: Text(
-                              "Please provide your residential address details for electoral mapping.",
+                              isTamil ? "தேர்தல் வரைபடத்திற்காக உங்கள் இருப்பிட முகவரி விவரங்களை வழங்கவும்." : "Please provide your residential address details for electoral mapping.",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 12,
@@ -258,16 +261,16 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           const SizedBox(height: 30),
 
                           // Street Field
-                          _buildLabel("Street Name"),
+                          _buildLabel(isTamil ? "தெரு பெயர்" : "Street Name"),
                           TextFormField(
                             controller: _streetController,
                             decoration: _pillDecoration(
-                              hintText: "Enter street name",
+                              hintText: isTamil ? "தெரு பெயரை உள்ளிடவும்" : "Enter street name",
                               suffixIcon: Icons.location_on,
                             ),
                             validator: (value) =>
                                 (value ?? "").trim().length < 3
-                                ? "Street is required"
+                                ? (isTamil ? "தெரு பெயர் தேவை" : "Street is required")
                                 : null,
                           ),
                           const SizedBox(height: 16),
@@ -279,15 +282,15 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _buildLabel("Door No."),
+                                    _buildLabel(isTamil ? "கதவு எண்" : "Door No."),
                                     TextFormField(
                                       controller: _doorNumberController,
                                       decoration: _pillDecoration(
-                                        hintText: "No.",
+                                        hintText: isTamil ? "எண்." : "No.",
                                       ),
                                       validator: (value) =>
                                           (value ?? "").trim().isEmpty
-                                          ? "Required"
+                                          ? (isTamil ? "தேவை" : "Required")
                                           : null,
                                     ),
                                   ],
@@ -298,13 +301,13 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _buildLabel("Pincode"),
+                                    _buildLabel(isTamil ? "அஞ்சல் குறியீடு" : "Pincode"),
                                     TextFormField(
                                       controller: _pincodeController,
                                       keyboardType: TextInputType.number,
                                       maxLength: 6,
                                       decoration: _pillDecoration(
-                                        hintText: "6 digits",
+                                        hintText: isTamil ? "6 இலக்கங்கள்" : "6 digits",
                                       ).copyWith(counterText: ""),
                                       inputFormatters: [
                                         FilteringTextInputFormatter.digitsOnly,
@@ -313,7 +316,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                           !RegExp(
                                             r"^\d{6}$",
                                           ).hasMatch((value ?? "").trim())
-                                          ? "Invalid"
+                                          ? (isTamil ? "தவறானது" : "Invalid")
                                           : null,
                                     ),
                                   ],
@@ -324,22 +327,22 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           const SizedBox(height: 16),
 
                           // Village Field
-                          _buildLabel("Village / City"),
+                          _buildLabel(isTamil ? "கிராமம் / நகரம்" : "Village / City"),
                           TextFormField(
                             controller: _villageController,
                             decoration: _pillDecoration(
-                              hintText: "Enter village or city",
+                              hintText: isTamil ? "கிராமம் அல்லது நகரத்தை உள்ளிடவும்" : "Enter village or city",
                               suffixIcon: Icons.location_city,
                             ),
                             validator: (value) =>
                                 (value ?? "").trim().length < 2
-                                ? "Village / City is required"
+                                ? (isTamil ? "கிராமம் / நகரம் தேவை" : "Village / City is required")
                                 : null,
                           ),
                           const SizedBox(height: 16),
 
                           // District Dropdown
-                          _buildLabel("District"),
+                          _buildLabel(isTamil ? "மாவட்டம்" : "District"),
                           DropdownButtonFormField<String>(
                             value: _selectedDistrict,
                             isExpanded: true,
@@ -349,7 +352,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                             ),
                             decoration: _pillDecoration(),
                             hint: Text(
-                              "Select District",
+                              isTamil ? "மாவட்டத்தை தேர்ந்தெடுக்கவும்" : "Select District",
                               style: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontSize: 14,
@@ -364,7 +367,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                 )
                                 .toList(),
                             validator: (value) => value == null || value.isEmpty
-                                ? "District is required"
+                                ? (isTamil ? "மாவட்டம் தேவை" : "District is required")
                                 : null,
                             onChanged: (value) {
                               setState(() {
@@ -376,7 +379,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           const SizedBox(height: 16),
 
                           // Constituency Dropdown
-                          _buildLabel("Constituency"),
+                          _buildLabel(isTamil ? "தொகுதி" : "Constituency"),
                           DropdownButtonFormField<String>(
                             value:
                                 constituencyOptions.contains(
@@ -391,7 +394,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                             ),
                             decoration: _pillDecoration(),
                             hint: Text(
-                              "Select Constituency",
+                              isTamil ? "தொகுதியை தேர்ந்தெடுக்கவும்" : "Select Constituency",
                               style: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontSize: 14,
@@ -406,7 +409,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                 )
                                 .toList(),
                             validator: (value) => value == null || value.isEmpty
-                                ? "Constituency is required"
+                                ? (isTamil ? "தொகுதி தேவை" : "Constituency is required")
                                 : null,
                             onChanged: _selectedDistrict == null
                                 ? null
@@ -421,7 +424,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                             Padding(
                               padding: const EdgeInsets.only(top: 8, left: 8),
                               child: Text(
-                                "Select district first to load constituencies.",
+                                isTamil ? "தொகுதிகளை ஏற்ற முதலில் மாவட்டத்தைத் தேர்ந்தெடுக்கவும்." : "Select district first to load constituencies.",
                                 style: TextStyle(
                                   color: Colors.orange.shade700,
                                   fontSize: 12,
@@ -432,7 +435,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                             Padding(
                               padding: const EdgeInsets.only(top: 8, left: 8),
                               child: Text(
-                                "Showing full Tamil Nadu constituency list.",
+                                isTamil ? "முழு தமிழ்நாடு தொகுதி பட்டியலைக் காட்டுகிறது." : "Showing full Tamil Nadu constituency list.",
                                 style: TextStyle(
                                   color: Colors.orange.shade700,
                                   fontSize: 12,
@@ -442,7 +445,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           const SizedBox(height: 16),
 
                           // State Field (Read-only)
-                          _buildLabel("State"),
+                          _buildLabel(isTamil ? "மாநிலம்" : "State"),
                           TextFormField(
                             readOnly: true,
                             initialValue: TamilNaduElectoralData.state,
@@ -480,9 +483,9 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Text(
-                                      "Save & Continue",
-                                      style: TextStyle(
+                                  : Text(
+                                      isTamil ? "சேமித்து தொடரவும்" : "Save & Continue",
+                                      style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w900,
                                       ),
@@ -505,9 +508,9 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                               style: TextButton.styleFrom(
                                 foregroundColor: Colors.black87,
                               ),
-                              child: const Text(
-                                "Back to Login",
-                                style: TextStyle(
+                              child: Text(
+                                isTamil ? "உள்நுழையவும்" : "Back to Login",
+                                style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
                                 ),

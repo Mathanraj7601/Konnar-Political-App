@@ -1,12 +1,14 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
 
 import "../config/app_config.dart";
+import "../providers/language_provider.dart";
 import "../theme/app_theme.dart";
 import "../widgets/alternating_word_text.dart";
 import "../widgets/primary_button.dart";
-import "member_card_screen.dart";
+import "home_screen.dart";
 
 class RegistrationSuccessScreen extends StatefulWidget {
   final String memberId;
@@ -30,7 +32,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
 
   void _openMemberCard() {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const MemberCardScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
       (route) => false,
     );
   }
@@ -43,6 +45,8 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isTamil = context.watch<LanguageProvider>().isTamil;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -84,17 +88,17 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                 ),
                 const SizedBox(height: 32),
                 
-                const AlternatingWordText(
-                  text: "Registration Successful!",
+                AlternatingWordText(
+                  text: isTamil ? "பதிவு வெற்றிகரமானது!" : "Registration Successful!",
                   firstColor: AppTheme.primary,
                   secondColor: Colors.black87,
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 
                 Text(
-                  "Welcome to the ${AppConfig.partyName} family.",
+                  isTamil ? "${AppConfig.partyName} குடும்பத்திற்கு உங்களை வரவேற்கிறோம்." : "Welcome to the ${AppConfig.partyName} family.",
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey.shade600,
@@ -113,8 +117,8 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                     ),
                     child: Column(
                       children: [
-                        const Text(
-                          "Your Member ID",
+                        Text(
+                          isTamil ? "உங்கள் உறுப்பினர் எண்" : "Your Member ID",
                           style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
@@ -134,14 +138,14 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
 
                 const SizedBox(height: 24),
                 Text(
-                  "An SMS confirmation has been sent to your registered mobile number.",
+                  isTamil ? "உங்கள் பதிவு செய்யப்பட்ட அலைபேசி எண்ணிற்கு SMS உறுதிப்படுத்தல் அனுப்பப்பட்டுள்ளது." : "An SMS confirmation has been sent to your registered mobile number.",
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   textAlign: TextAlign.center,
                 ),
                 
                 const SizedBox(height: 40),
                 PrimaryButton(
-                  label: "View Member Card",
+                  label: isTamil ? "உறுப்பினர் அட்டையைக் காண்க" : "View Member Card",
                   icon: Icons.credit_card_rounded,
                   onPressed: _openMemberCard,
                 ),

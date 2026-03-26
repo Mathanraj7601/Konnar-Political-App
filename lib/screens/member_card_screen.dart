@@ -48,7 +48,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
 
     if (!authProvider.isAuthenticated) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Session Ended")),
+        appBar: AppBar(title: const Text("அமர்வு முடிந்தது")),
         body: Center(
           child: ElevatedButton(
             onPressed: () {
@@ -57,7 +57,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
                 (route) => false,
               );
             },
-            child: const Text("Go to Login"),
+            child: const Text("உள்நுழையவும்"),
           ),
         ),
       );
@@ -79,7 +79,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
       backgroundColor: Colors.grey.shade200, // Background behind the card
       appBar: AppBar(
         title: const Text(
-          "My ID Card",
+          "எனது அடையாள அட்டை",
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
@@ -88,7 +88,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
           IconButton(
             onPressed: _logout,
             icon: const Icon(Icons.logout, color: Colors.red),
-            tooltip: "Logout",
+            tooltip: "வெளியேறு",
           ),
         ],
       ),
@@ -262,7 +262,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
 
               const SizedBox(height: 32),
               const Text(
-                "Rotate your phone to view card clearly",
+                "அட்டையை தெளிவாகப் பார்க்க உங்கள் மொபைலைத் திருப்பவும்",
                 style: TextStyle(color: Colors.grey, fontSize: 13),
               ),
               if (authProvider.isLoading)

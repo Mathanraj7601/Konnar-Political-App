@@ -3,6 +3,7 @@ import "package:provider/provider.dart";
 
 import "config/app_config.dart";
 import "providers/auth_provider.dart";
+import "providers/language_provider.dart";
 import "screens/splash_screen.dart";
 import "services/api_client.dart";
 import "services/auth_service.dart";
@@ -21,6 +22,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider<LanguageProvider>(create: (_) => LanguageProvider()),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             authService: AuthService(apiClient),

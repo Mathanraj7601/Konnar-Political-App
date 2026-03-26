@@ -1,8 +1,10 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
 
 import "../config/app_config.dart";
+import "../providers/language_provider.dart";
 import "../theme/app_theme.dart";
 import "../widgets/alternating_word_text.dart";
 import "login_screen.dart";
@@ -17,6 +19,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
+        final isTamil = context.watch<LanguageProvider>().isTamil;
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -51,9 +54,9 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       elevation: 8,
                     ),
-                    child: const Text(
-                      "Get Started",
-                      style: TextStyle(
+                    child: Text(
+                      isTamil ? "தொடங்கவும்" : "Get Started",
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
