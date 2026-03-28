@@ -39,7 +39,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   String? _profileImagePath;
   String? _profileImageBytes; 
 
-  String? _selectedGender = 'Male';
+  String? _selectedGender;
   String? _selectedBloodGroup;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
@@ -136,6 +136,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       dob: _selectedDob!,
       age: age,
       profileImagePath: _profileImagePath,
+      gender: _selectedGender,
+      bloodGroup: _selectedBloodGroup,
       // Pass gender and blood group to your draft model here if needed
     );
 
@@ -203,6 +205,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AuthProvider>();
     final isTamil = context.watch<LanguageProvider>().isTamil;
+    const List<String> steps = ['Personal', 'Identity', 'Address', 'Confirm'];
+    const int currentStep = 0;
 
     return Scaffold(
       backgroundColor: _bgOffWhite,
@@ -222,41 +226,66 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER ---
-                Text(
-                  isTamil ? "உறுப்பினர் கணக்கை உருவாக்கவும்" : "Create Member Account",
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
+                // --- STEP X OF Y TITLE ---
+                Center(
+                  child: Text(
+                    isTamil
+                        ? "படி ${currentStep + 1} / ${steps.length}"
+                        : "Step ${currentStep + 1} of ${steps.length}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "உறுப்பினர் பதிவு",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                const SizedBox(height: 16),
+
+                // --- HEADER ---
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        isTamil ? "உறுப்பினர் கணக்கை உருவாக்கவும்" : "Create Member Account",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "உறுப்பினர் பதிவு",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 // --- STEPPER ---
-                const CustomStepper(
-                  currentStep: 0, // 0 for 'Personal'
-                  steps: ['Personal', 'Identity', 'Address', 'Confirm'],
+                CustomStepper(
+                  currentStep: currentStep,
+                  steps: steps,
                   // The activeColor is already set to match this screen's theme.
                 ),
                 const SizedBox(height: 32),
 
                 // --- PERSONAL INFORMATION SECTION ---
-                const Text(
-                  "Personal Information",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
+                const Center(
+                  child: Text(
+                    "Personal Information",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -405,7 +434,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           controller: _mobileController,
                           keyboardType: TextInputType.number,
                           maxLength: 10,
-                          decoration: _inputDeco(Icons.phone).copyWith(counterText: ""),
+                          decoration: _inputDeco(Icons.phone),
                           validator: (val) {
                             final input = val?.trim() ?? "";
                             if (input.isEmpty) return isTamil ? "தேவை" : "Required";
@@ -429,7 +458,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                 readOnly: true,
                                 onTap: _pickDob,
                                 decoration: _inputDeco(Icons.calendar_month).copyWith(
-                                  hintText: "15 Mar 2001",
+                                  hintText: isTamil ? "தேதியைத் தேர்ந்தெடுக்கவும்" : "Select Date",
                                   hintStyle: TextStyle(color: Colors.grey.shade400)
                                 ),
                                 validator: (val) => (val ?? "").isEmpty ? "Required" : null,
@@ -445,10 +474,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                 controller: _ageController,
                                 readOnly: true,
                                 textAlign: TextAlign.center,
-                                decoration: _inputDeco(null).copyWith(
-                                  hintText: "25",
-                                  hintStyle: TextStyle(color: Colors.grey.shade400)
-                                ),
+                                decoration: _inputDeco(null),
                               ),
                             ),
                           ),
@@ -464,13 +490,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               DropdownButtonFormField<String>(
                                 value: _selectedGender,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(Icons.male),
+                                decoration: _inputDeco(Icons.person_outline).copyWith(hintText: isTamil ? "பாலினத்தைத் தேர்ந்தெடுக்கவும்" : "Select Gender"),
                                 items: _genders.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Text(value, style: const TextStyle(fontSize: 14)),
                                   );
                                 }).toList(),
+                                validator: (val) => val == null ? (isTamil ? "தேவை" : "Required") : null,
                                 onChanged: (val) => setState(() => _selectedGender = val),
                               ),
                             ),
@@ -482,7 +509,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               DropdownButtonFormField<String>(
                                 value: _selectedBloodGroup,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(null).copyWith(hintText: "O+"),
+                                decoration: _inputDeco(null).copyWith(hintText: isTamil ? "குழுவைத் தேர்ந்தெடுக்கவும்" : "Select Group"),
                                 items: _bloodGroups.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,

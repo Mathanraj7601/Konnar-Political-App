@@ -35,11 +35,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final _ageController = TextEditingController();
   final _imagePicker = ImagePicker();
 
+  // Keep a single instance of the draft for the entire flow so data isn't lost on back/edit
+  final RegistrationDraft _draft = RegistrationDraft();
+
   DateTime? _selectedDob;
   String? _profileImagePath;
   Uint8List? _profileImageBytes;
 
-  String? _selectedGender = 'Male';
+  String? _selectedGender;
   String? _selectedBloodGroup;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
@@ -53,8 +56,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.initialName ?? '');
-    _mobileController = TextEditingController(text: widget.mobileNumber ?? '');
+    // If the draft is fresh, initialize it with widget properties.
+    // This happens only on the first entry to the registration flow.
+    if (_draft.mobile.isEmpty && widget.mobileNumber != null) {
+      _draft.mobile = widget.mobileNumber!;
+    }
+    if (_draft.name.isEmpty && widget.initialName != null) {
+      _draft.name = widget.initialName!;
+    }
+
+    // Always populate controllers and state from the draft.
+    // This ensures that when we navigate back, the fields show the latest data.
+    _nameController = TextEditingController(text: _draft.name);
+    _mobileController = TextEditingController(text: _draft.mobile);
+    
+    if (_draft.dob != null) {
+      _selectedDob = _draft.dob;
+      _dobController.text = formatDateLong(_draft.dob!);
+      _ageController.text = _draft.age.toString();
+    }
+    
+    _selectedGender = _draft.gender;
+    _selectedBloodGroup = _draft.bloodGroup;
+    _profileImagePath = _draft.profileImagePath;
+    _profileImageBytes = _draft.profileImageBytes;
   }
 
   Future<void> _pickDob() async {
@@ -130,18 +155,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     final age = int.tryParse(_ageController.text) ?? 0;
 
-    final draft = RegistrationDraft(
-      name: _nameController.text.trim(),
-      mobile: _mobileController.text.trim(),
-      dob: _selectedDob!,
-      age: age,
-      gender: _selectedGender,
-      bloodGroup: _selectedBloodGroup,
-      profileImagePath: _profileImagePath,
-      profileImageBytes: _profileImageBytes,
-    );
+    _draft.name = _nameController.text.trim();
+    _draft.mobile = _mobileController.text.trim();
+    _draft.dob = _selectedDob;
+    _draft.age = age;
+    _draft.gender = _selectedGender;
+    _draft.bloodGroup = _selectedBloodGroup;
+    _draft.profileImagePath = _profileImagePath;
+    _draft.profileImageBytes = _profileImageBytes;
 
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => RegistrationStep2Screen(draft: draft)));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => RegistrationStep2Screen(draft: _draft)));
   }
 
   @override
@@ -205,6 +228,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AuthProvider>();
     final isTamil = context.watch<LanguageProvider>().isTamil;
+    const List<String> steps = ['Personal', 'Identity', 'Address', 'Confirm'];
+    const int currentStep = 0;
 
     return Scaffold(
       backgroundColor: _bgOffWhite,
@@ -224,30 +249,53 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER ---
-                Text(
-                  isTamil ? "தனிப்பட்ட தகவல்" : "Personal Information",
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
+                // --- STEP X OF Y TITLE ---
+                Center(
+                  child: Text(
+                    isTamil
+                        ? "படி ${currentStep + 1} / ${steps.length}"
+                        : "Step ${currentStep + 1} of ${steps.length}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  isTamil ? "உறுப்பினர் கணக்கை உருவாக்கவும்" : "Create Member Account",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+                const SizedBox(height: 16),
+
+                // --- HEADER ---
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        isTamil ? "தனிப்பட்ட தகவல்" : "Personal Information",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isTamil ? "உறுப்பினர் கணக்கை உருவாக்கவும்" : "Create Member Account",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // --- STEPPER ---
-                const CustomStepper(
-                  currentStep: 0, // 0 for 'Personal'
-                  steps: ['Personal', 'Identity', 'Address', 'Confirm'],
+                CustomStepper(
+                  currentStep: currentStep,
+                  steps: steps,
                 ),
                 const SizedBox(height: 24),
 
@@ -383,7 +431,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         isTamil ? "முழு பெயர்" : "Full Name",
                         TextFormField(
                           controller: _nameController,
-                          decoration: _inputDeco(Icons.person),
+                          decoration: _inputDeco(Icons.person).copyWith(
+                            hintText: isTamil ? "உங்கள் முழு பெயரை உள்ளிடவும்" : "Enter your full name",
+                          ),
                           validator: (val) => (val?.trim() ?? "").length < 3 ? "Required" : null,
                         ),
                       ),
@@ -395,7 +445,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           controller: _mobileController,
                           keyboardType: TextInputType.number,
                           maxLength: 10,
-                          decoration: _inputDeco(Icons.phone).copyWith(counterText: ""),
+                          decoration: _inputDeco(Icons.phone).copyWith(
+                            hintText: isTamil ? "10 இலக்க மொபைல் எண்" : "10-digit mobile number",
+                          ),
                           validator: (val) {
                             final input = val?.trim() ?? "";
                             if (input.isEmpty) return isTamil ? "தேவை" : "Required";
@@ -419,7 +471,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 readOnly: true,
                                 onTap: _pickDob,
                                 decoration: _inputDeco(Icons.calendar_month).copyWith(
-                                  hintText: "15 Mar 2001",
+                                  hintText: isTamil ? "தேதியைத் தேர்ந்தெடுக்கவும்" : "Select Date",
                                   hintStyle: TextStyle(color: Colors.grey.shade400)
                                 ),
                                 validator: (val) => (val ?? "").isEmpty ? "Required" : null,
@@ -436,8 +488,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 readOnly: true,
                                 textAlign: TextAlign.center,
                                 decoration: _inputDeco(null).copyWith(
-                                  hintText: "25",
-                                  hintStyle: TextStyle(color: Colors.grey.shade400)
+                                  hintText: isTamil ? "வயது" : "Age",
                                 ),
                               ),
                             ),
@@ -454,13 +505,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               DropdownButtonFormField<String>(
                                 value: _selectedGender,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(Icons.male),
+                                decoration: _inputDeco(Icons.person_outline).copyWith(hintText: isTamil ? "பாலினத்தைத் தேர்ந்தெடுக்கவும்" : "Select Gender"),
                                 items: _genders.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Text(value, style: const TextStyle(fontSize: 14)),
                                   );
                                 }).toList(),
+                                validator: (val) => val == null ? (isTamil ? "தேவை" : "Required") : null,
                                 onChanged: (val) => setState(() => _selectedGender = val),
                               ),
                             ),
@@ -472,7 +524,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               DropdownButtonFormField<String>(
                                 value: _selectedBloodGroup,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(null).copyWith(hintText: "O+"),
+                                decoration: _inputDeco(null).copyWith(hintText: isTamil ? "குழுவைத் தேர்ந்தெடுக்கவும்" : "Select Group"),
                                 items: _bloodGroups.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,

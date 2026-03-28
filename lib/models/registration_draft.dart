@@ -28,7 +28,7 @@ class RegistrationDraft {
     this.mobile = '',
     this.dob,
     this.age = 0,
-    this.gender = 'Male',
+    this.gender,
     this.bloodGroup,
     this.profileImagePath,
     this.profileImageBytes,

@@ -31,7 +31,6 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
   final _villageController = TextEditingController();
 
   bool _isLocating = false;
-  bool _locationFound = false;
 
   @override
   void initState() {
@@ -91,13 +90,11 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
 
-        // Attempt to find a matching district from the geocoded data.
+        // Attempt to find a matching district
         String? matchedDistrict;
-        // subAdministrativeArea is often the district (e.g., "Kancheepuram District")
         final geocodedDistrictName = place.subAdministrativeArea ?? '';
         if (geocodedDistrictName.isNotEmpty) {
           for (final district in TamilNaduElectoralData.districts) {
-            // Case-insensitive comparison
             if (geocodedDistrictName.toLowerCase().contains(district.toLowerCase())) {
               matchedDistrict = district;
               break;
@@ -106,29 +103,34 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
         }
 
         setState(() {
-          // Intelligently combine available street data
-          String street = <String?>[place.subThoroughfare, place.thoroughfare, place.subLocality]
+          // IMPROVED BINDING LOGIC:
+          // 1. subThoroughfare is usually the building/door number
+          String doorNo = place.subThoroughfare ?? '';
+          
+          // 2. thoroughfare is the street name, subLocality is the area
+          String street = <String?>[place.thoroughfare, place.subLocality]
               .whereType<String>()
-              .where((e) => e.trim().isNotEmpty)
+              .where((e) => e.trim().isNotEmpty && e != doorNo) // Don't duplicate door no in street
               .join(', ');
-              
+
+          // 3. locality is usually the city, town, or village
+          String village = place.locality ?? place.administrativeArea ?? '';
+
+          _doorNoController.text = doorNo.trim();
           _streetController.text = street.trim();
           _pincodeController.text = place.postalCode ?? '';
-          _villageController.text = place.locality ?? ''; // Locality is typically the city/village
+          _villageController.text = village.trim();
           
           if (matchedDistrict != null) {
             _draft.district = matchedDistrict;
             _draft.constituency = null; // Reset constituency to avoid errors
           }
-
-          _locationFound = true;
         });
       }
     } catch (e) {
       if (!mounted) return;
       String errorMsg = e.toString();
       
-      // Handle native platform null errors from Geocoding plugin (common on emulators)
       if (errorMsg.toLowerCase().contains("null") || errorMsg.contains("PlatformException")) {
         errorMsg = isTamil 
             ? "முகவரியைக் கண்டறிய முடியவில்லை. தயவுசெய்து கைமுறையாக உள்ளிடவும்." 
@@ -160,9 +162,11 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
     final isTamil = context.watch<LanguageProvider>().isTamil;
     final authProvider = context.watch<AuthProvider>();
     final constituencyOptions = _draft.district == null ? <String>[] : TamilNaduElectoralData.constituenciesForDistrict(_draft.district!);
+    const List<String> steps = ['Personal', 'Identity', 'Address', 'Confirm'];
+    const int currentStep = 2;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8F9FA), // Overall app background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -173,16 +177,29 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Center(
+              child: Text(
+                isTamil
+                    ? "படி ${currentStep + 1} / ${steps.length}"
+                    : "Step ${currentStep + 1} of ${steps.length}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(isTamil ? "குடியிருப்பு முகவரி" : "Residential Address", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 4),
             Text(isTamil ? "உங்கள் இருப்பிடத்தை நாங்கள் கண்டறிவோம்..." : "We'll auto-detect your location for accu...", style: const TextStyle(fontSize: 14, color: Colors.grey), textAlign: TextAlign.center),
             const SizedBox(height: 16),
             CustomStepper(
-              currentStep: 2,
+              currentStep: currentStep,
+              steps: steps,
               onStepTapped: (index) {
-                if (index < 2) {
-                  // Pop the correct amount of times based on how far back they clicked
-                  int pops = 2 - index;
+                if (index < currentStep) {
+                  int pops = currentStep - index;
                   for (int i = 0; i < pops; i++) Navigator.of(context).pop();
                 }
               },
@@ -196,49 +213,50 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // --- ADDED: Map and Use Current Location Design ---
+                      
+                      // --- UPDATED MAP/LOCATION CARD ---
                       Container(
                         height: 160,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8F9FA),
+                          // Using the light grey theme from your image
+                          color: const Color(0xFFF6F7F9), 
                           borderRadius: BorderRadius.circular(16),
-                          image: _locationFound ? const DecorationImage(
-                            image: NetworkImage('https://via.placeholder.com/600x300?text=Map+Loaded'),
-                            fit: BoxFit.cover,
-                          ) : null,
                         ),
-                        child: Stack(
-                          alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Center Map Marker
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 20.0), // Offset slightly to account for the button
-                              child: Icon(Icons.location_on, color: Color(0xFFEA4335), size: 50),
+                            const Spacer(),
+                            // Centered Red Location Pin
+                            const Icon(
+                              Icons.location_on, 
+                              color: Color(0xFFEA4335), // Google Maps Red
+                              size: 48
                             ),
-                            
-                            // Dark Blue Floating Button
-                            Positioned(
-                              bottom: 12,
-                              left: 20,
-                              right: 20,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1E2A5D), // Dark blue
-                                  foregroundColor: const Color(0xFFFFB732), // Yellow color for icon and text
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
+                            const Spacer(),
+                            // Dark Blue Button inside the card
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF1E2A5D), // Dark blue from your design
+                                    foregroundColor: const Color(0xFFFFB732), // Yellow text/icon color
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(22),
+                                    ),
+                                    elevation: 0,
                                   ),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  elevation: 4,
-                                ),
-                                onPressed: _isLocating ? null : _getCurrentLocation,
-                                icon: _isLocating 
-                                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Color(0xFFFFB732), strokeWidth: 2))
-                                    : const Icon(Icons.near_me, size: 20),
-                                label: Text(
-                                  _isLocating ? (isTamil ? "கண்டுபிடிக்கிறது..." : "Locating...") : (isTamil ? "தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்" : "Use Current Location"),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  onPressed: _isLocating ? null : _getCurrentLocation,
+                                  icon: _isLocating 
+                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFFFFB732), strokeWidth: 2))
+                                      : const Icon(Icons.near_me, size: 20),
+                                  label: Text(
+                                    _isLocating ? (isTamil ? "கண்டுபிடிக்கிறது..." : "Locating...") : (isTamil ? "தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்" : "Use Current Location"),
+                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                  ),
                                 ),
                               ),
                             ),
@@ -248,17 +266,41 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                       const SizedBox(height: 24),
                       // --- END MAP SECTION ---
 
-                      FormInputField(controller: _streetController, label: isTamil ? "தெரு பெயர்" : "Street Name", prefixIcon: Icons.location_on, validator: (v) => (v?.isEmpty ?? true) ? "Required" : null),
+                      FormInputField(
+                          controller: _streetController, 
+                          label: isTamil ? "தெரு பெயர்" : "Street Name", 
+                          hintText: isTamil ? "தெரு பெயரை உள்ளிடவும்" : "Enter street name",
+                          prefixIcon: Icons.location_on, 
+                          validator: (v) => (v?.isEmpty ?? true) ? "Required" : null),
                       const SizedBox(height: 20),
                       Row(
                         children: [
-                          Expanded(child: FormInputField(controller: _doorNoController, label: isTamil ? "கதவு எண்" : "Door No.", prefixIcon: Icons.pin_drop, validator: (v) => (v?.isEmpty ?? true) ? "Required" : null)),
+                          Expanded(
+                              child: FormInputField(
+                                  controller: _doorNoController, 
+                                  label: isTamil ? "கதவு எண்" : "Door No.", 
+                                  hintText: isTamil ? "கதவு எண்" : "Door number",
+                                  prefixIcon: Icons.pin_drop, 
+                                  validator: (v) => (v?.isEmpty ?? true) ? "Required" : null)),
                           const SizedBox(width: 16),
-                          Expanded(child: FormInputField(controller: _pincodeController, label: isTamil ? "அஞ்சல் குறியீடு" : "Pincode", prefixIcon: Icons.markunread_mailbox, keyboardType: TextInputType.number, maxLength: 6, validator: (v) => (v?.length ?? 0) != 6 ? "6 digits" : null)),
+                          Expanded(
+                              child: FormInputField(
+                                  controller: _pincodeController, 
+                                  label: isTamil ? "அஞ்சல் குறியீடு" : "Pincode", 
+                                  hintText: isTamil ? "6 இலக்கங்கள்" : "6-digit code",
+                                  prefixIcon: Icons.markunread_mailbox, 
+                                  keyboardType: TextInputType.number, 
+                                  maxLength: 6, 
+                                  validator: (v) => (v?.length ?? 0) != 6 ? "6 digits" : null)),
                         ],
                       ),
                       const SizedBox(height: 20),
-                      FormInputField(controller: _villageController, label: isTamil ? "கிராமம் / நகரம்" : "Village / City", prefixIcon: Icons.location_city, validator: (v) => (v?.isEmpty ?? true) ? "Required" : null),
+                      FormInputField(
+                          controller: _villageController, 
+                          label: isTamil ? "கிராமம் / நகரம்" : "Village / City", 
+                          hintText: isTamil ? "கிராமம் அல்லது நகரத்தை உள்ளிடவும்" : "Enter village or city",
+                          prefixIcon: Icons.location_city, 
+                          validator: (v) => (v?.isEmpty ?? true) ? "Required" : null),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
                         value: TamilNaduElectoralData.districts.contains(_draft.district)
@@ -336,7 +378,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(isTamil ? "விவரங்களை மதிப்பாய்வு செய்க" : "Review Details", style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(isTamil ? "தொடரவும்" : "Continue", style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                           const SizedBox(width: 8),
                           const Icon(Icons.arrow_forward, color: Colors.black, size: 20),
                         ],

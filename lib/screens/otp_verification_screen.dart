@@ -82,7 +82,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             name: widget.draft!.name,
             mobile: widget.draft!.mobile,
             dob: widget.draft!.dob!,
-            gender: widget.draft!.gender ?? 'Male',
+            gender: widget.draft!.gender ?? '',
             bloodGroup: widget.draft!.bloodGroup,
             fatherName: widget.draft!.fatherName ?? '',
             voterId: widget.draft!.voterId,

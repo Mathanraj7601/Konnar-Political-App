@@ -25,6 +25,17 @@ class RegistrationStep4ConfirmScreen extends StatefulWidget {
 class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4ConfirmScreen> {
   bool _isSubmitting = false;
 
+  void _editDetails() {
+    // Navigate back to the first screen (step 0)
+    // currentStep is 3, so we need to pop 3 times.
+    const int popsToFirstScreen = 3;
+    for (int i = 0; i < popsToFirstScreen; i++) {
+      if (Navigator.canPop(context)) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
   Future<void> _submitRegistration() async {
     final isTamil = context.read<LanguageProvider>().isTamil;
     
@@ -68,11 +79,12 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
   Widget build(BuildContext context) {
     final draft = widget.draft;
     final isTamil = context.watch<LanguageProvider>().isTamil;
+    const List<String> steps = ['Personal', 'Identity', 'Address', 'Confirm'];
+    const int currentStep = 3;
 
-    // Make status bar transparent for full blue header coverage
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: Color(0xFFF4F6FB),
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness.dark,
@@ -80,201 +92,205 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
-            // 🔷 BLUE HEADER CARD - FULL WIDTH
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 16,
-                left: 16,
-                right: 16,
-                bottom: 20,
-              ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            // --- STEP X OF Y TITLE ---
+            Center(
+              child: Text(
+                isTamil
+                    ? "படி ${currentStep + 1} / ${steps.length}"
+                    : "Step ${currentStep + 1} of ${steps.length}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // BACK BUTTON AND TITLE
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isTamil ? "விவரங்களை உறுதிப்படுத்தவும்" : "Confirm Details",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // PROFILE INFO
-                  Row(
-                    children: [
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade200,
-                          image: DecorationImage(
-                            image: draft.profileImageBytes != null 
-                                ? MemoryImage(draft.profileImageBytes!) as ImageProvider
-                                : const AssetImage(AppConfig.profileImageAsset),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              draft.name.isNotEmpty ? draft.name : (isTamil ? "பெயர் இல்லை" : "Name not provided"),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "+91 ${draft.mobile}",
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ),
+            const SizedBox(height: 16),
             
-            // WHITE CONTENT AREA
+            Text(
+              isTamil ? "விவரங்களை உறுதிப்படுத்தவும்" : "Confirm Details",
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isTamil ? "உங்கள் தகவலைச் சரிபார்க்கவும்" : "Review your information",
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            
+            // --- STEPPER ---
+            CustomStepper(
+              currentStep: currentStep,
+              steps: steps,
+              onStepTapped: (index) {
+                if (index < currentStep) {
+                  int pops = currentStep - index;
+                  for (int i = 0; i < pops; i++) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // 🔥 PROFILE CARD
             Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F6FB),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              padding: const EdgeInsets.all(16),
-              child: Column(
+              padding: const EdgeInsets.all(14),
+              decoration: _card(),
+              child: Row(
                 children: [
-                  const SizedBox(height: 10),
-                  
-                  // --- STEPPER ---
-                  CustomStepper(
-                    currentStep: 3, // Step 4 active
-                    onStepTapped: (index) {
-                      if (index < 3) {
-                        int pops = 3 - index;
-                        for (int i = 0; i < pops; i++) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    },
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: draft.profileImageBytes != null 
+                        ? MemoryImage(draft.profileImageBytes!) as ImageProvider
+                        : const AssetImage(AppConfig.profileImageAsset),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  _baseCard(
-                    children: [
-                      _row(Icons.person, isTamil ? "முழு பெயர்" : "Full Name", draft.name.isNotEmpty ? draft.name : "-"),
-                      _divider(),
-                      _row(Icons.phone, isTamil ? "மொபைல் எண்" : "Mobile Number", draft.mobile),
-                      _divider(),
-                      _row(Icons.calendar_today, isTamil ? "பிறந்த தேதி" : "Date of Birth", draft.dob != null ? formatDateLong(draft.dob!) : "-"),
-                      _divider(),
-                      _row(Icons.people, isTamil ? "பாலினம்" : "Gender", draft.gender ?? "-"),
-                      _divider(),
-                      _row(Icons.person_outline, isTamil ? "தந்தை / பாதுகாவலர் பெயர்" : "Father / Guardian Name", (draft.fatherName?.isNotEmpty ?? false) ? draft.fatherName! : "-"),
-                    ],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          draft.name.isNotEmpty ? draft.name : (isTamil ? "பெயர் இல்லை" : "Name not provided"),
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "+91 ${draft.mobile}",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: 16),
-
-                  _baseCard(
-                    children: [
-                      _sectionTitle(Icons.location_on, isTamil ? "முகவரி" : "Address"),
-                      _divider(),
-                      _row(Icons.location_on, isTamil ? "தெரு" : "Street", draft.street ?? "-"),
-                      _divider(),
-                      _row(Icons.home, isTamil ? "கதவு எண்" : "Door No", draft.doorNumber ?? "-"),
-                      _divider(),
-                      _row(Icons.location_city, isTamil ? "கிராமம்/நகரம்" : "City / Village", draft.village ?? "-"),
-                      _divider(),
-                      _row(Icons.map, isTamil ? "மாவட்டம்" : "District", draft.district ?? "-"),
-                      _divider(),
-                      _row(Icons.place, isTamil ? "தொகுதி" : "Constituency", draft.constituency ?? "-"),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  _button(isTamil),
-
-                  const SizedBox(height: 20), // bottom safe spacing
                 ],
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // 🔲 DETAILS CARD
+            _cardSection([
+              _row(Icons.person, isTamil ? "முழு பெயர்" : "Full Name", draft.name.isNotEmpty ? draft.name : "-"),
+              _divider(),
+              _row(Icons.phone, isTamil ? "மொபைல் எண்" : "Mobile Number", draft.mobile),
+              _divider(),
+              _row(Icons.calendar_today, isTamil ? "பிறந்த தேதி" : "Date of Birth", draft.dob != null ? formatDateLong(draft.dob!) : "-"),
+              _divider(),
+              _row(Icons.people, isTamil ? "பாலினம்" : "Gender", draft.gender ?? "-"),
+              _divider(),
+              _row(Icons.person_outline, isTamil ? "தந்தை / பாதுகாவலர் பெயர்" : "Father / Guardian Name", (draft.fatherName?.isNotEmpty ?? false) ? draft.fatherName! : "-"),
+            ]),
+
+            const SizedBox(height: 16),
+
+            // 📍 ADDRESS CARD
+            _cardSection([
+              _sectionTitle(Icons.location_on, isTamil ? "முகவரி" : "Address"),
+              _divider(),
+              _row(Icons.location_on, isTamil ? "தெரு" : "Street", draft.street ?? "-"),
+              _divider(),
+              _row(Icons.home, isTamil ? "கதவு எண்" : "Door No", draft.doorNumber ?? "-"),
+              _divider(),
+              _row(Icons.location_city, isTamil ? "கிராமம்/நகரம்" : "City / Village", draft.village ?? "-"),
+              _divider(),
+              _row(Icons.map, isTamil ? "மாவட்டம்" : "District", draft.district ?? "-"),
+              _divider(),
+              _row(Icons.place, isTamil ? "தொகுதி" : "Constituency", draft.constituency ?? "-"),
+            ]),
+
+            const SizedBox(height: 24),
+
+            // 🔘 BUTTONS
+            Row(
+              children: [
+                // EDIT BUTTON
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: OutlinedButton(
+                      onPressed: _isSubmitting ? null : _editDetails,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1E2A78),
+                        side: const BorderSide(color: Color(0xFF1E2A78), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        isTamil ? "திருத்து" : "Edit",
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // REGISTER BUTTON
+                Expanded(
+                  child: InkWell(
+                    onTap: _isSubmitting ? null : _submitRegistration,
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      height: 55,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      alignment: Alignment.center,
+                      child: _isSubmitting
+                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(
+                              isTamil ? "பதிவு செய்" : "Register",
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 30),
           ],
         ),
       ),
     );
   }
 
-  Widget _baseCard({required List<Widget> children}) {
+  // 🔲 CARD WRAPPER
+  Widget _cardSection(List<Widget> children) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+      decoration: _card(),
       child: Column(children: children),
     );
   }
 
+  // 🔹 ROW ITEM
   Widget _row(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: const Color(0xFFF3F5FA),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: const Color(0xFF1E2A78), size: 20),
           ),
@@ -314,27 +330,16 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
     );
   }
 
-  Widget _button(bool isTamil) {
-    return InkWell(
-      onTap: _isSubmitting ? null : _submitRegistration,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        height: 55,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
-          ),
-          borderRadius: BorderRadius.circular(30),
+  BoxDecoration _card() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
         ),
-        alignment: Alignment.center,
-        child: _isSubmitting 
-          ? const CircularProgressIndicator(color: Colors.white)
-          : Text(
-              isTamil ? "உறுதிசெய்து OTP அனுப்பு" : "Send OTP & Register",
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-      ),
+      ],
     );
   }
 }

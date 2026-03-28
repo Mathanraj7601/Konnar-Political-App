@@ -71,27 +71,49 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
   @override
   Widget build(BuildContext context) {
     final isTamil = context.watch<LanguageProvider>().isTamil;
+    const List<String> steps = ['Personal', 'Identity', 'Address', 'Confirm'];
+    const int currentStep = 1;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(isTamil ? "அடையாள விவரங்கள்" : "Identity Details", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+            // --- STEP X OF Y TITLE ---
+            Center(
+              child: Text(
+                isTamil
+                    ? "படி ${currentStep + 1} / ${steps.length}"
+                    : "Step ${currentStep + 1} of ${steps.length}",
+                style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(isTamil ? "அடையாள விவரங்கள்" : "Identity Details",
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 4),
-            Text(isTamil ? "உங்களைப் பற்றி மேலும் சொல்லுங்கள்" : "Tell us more about yourself", style: const TextStyle(fontSize: 14, color: Colors.grey)),
+            Text(
+                isTamil ? "உங்களைப் பற்றி மேலும் சொல்லுங்கள்" : "Tell us more about yourself",
+                style: const TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 16),
             CustomStepper(
-              currentStep: 1,
+              currentStep: currentStep,
+              steps: steps,
               onStepTapped: (index) {
-                if (index < 1) {
+                if (index < currentStep) {
                   Navigator.of(context).pop();
                 }
               },
@@ -99,17 +121,39 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(20)),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    FormInputField(controller: _fatherNameController, label: isTamil ? "தந்தை / பாதுகாவலர் பெயர்" : "Father's / Guardian's Name", prefixIcon: Icons.person, validator: (v) => (v?.isEmpty ?? true) ? (isTamil ? "தேவை" : "Required") : null),
+                    FormInputField(
+                        controller: _fatherNameController,
+                        label: isTamil
+                            ? "தந்தை / பாதுகாவலர் பெயர்"
+                            : "Father's / Guardian's Name",
+                        hintText: isTamil 
+                            ? "தந்தை/பாதுகாவலர் பெயரை உள்ளிடவும்" 
+                            : "Enter father/guardian name",
+                        prefixIcon: Icons.person,
+                        validator: (v) => (v?.isEmpty ?? true)
+                            ? (isTamil ? "தேவை" : "Required")
+                            : null),
                     const SizedBox(height: 20),
-                    FormInputField(controller: _voterIdController, label: isTamil ? "வாக்காளர் அடையாள அட்டை எண்" : "Voter ID Number", prefixIcon: Icons.how_to_vote),
+                    FormInputField(
+                        controller: _voterIdController,
+                        label: isTamil ? "வாக்காளர் அடையாள அட்டை எண்" : "Voter ID Number",
+                        hintText: isTamil ? "வாக்காளர் அடையாள எண்ணை உள்ளிடவும்" : "Enter voter ID number",
+                        prefixIcon: Icons.how_to_vote),
                     const SizedBox(height: 20),
-                    FormInputField(controller: _aadhaarController, label: isTamil ? "ஆதார் எண்" : "Aadhaar Number", prefixIcon: Icons.fingerprint, keyboardType: TextInputType.number),
+                    FormInputField(
+                        controller: _aadhaarController, 
+                        label: isTamil ? "ஆதார் எண்" : "Aadhaar Number", 
+                        hintText: isTamil ? "12 இலக்க ஆதார் எண்" : "12-digit Aadhaar number",
+                        prefixIcon: Icons.fingerprint, 
+                        keyboardType: TextInputType.number, 
+                        maxLength: 12),
                     const SizedBox(height: 20),
                     Text(isTamil ? "அடையாளச் சான்றை பதிவேற்றவும் (விருப்பத்தேர்வு)" : "Upload ID Proof (Optional)", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
@@ -125,11 +169,27 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           child: _draft.idProofPath != null
-                              ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.check_circle, color: Colors.green), const SizedBox(width: 8), Flexible(child: Text(_draft.idProofPath!.split('/').last.split('\\').last, overflow: TextOverflow.ellipsis))])
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                      const Icon(Icons.check_circle,
+                                          color: Colors.green),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                          child: Text(_draft.idProofPath!
+                                              .split('/')
+                                              .last
+                                              .split('\\')
+                                              .last, overflow: TextOverflow.ellipsis))
+                                    ])
                               : Column(children: [
-                                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.upload_file, color: Color(0xFF1E2A5D), size: 20), const SizedBox(width: 8), Text(isTamil ? "ஆவணத்தைப் பதிவேற்று" : "Upload Document", style: const TextStyle(color: Color(0xFF1E2A5D), fontWeight: FontWeight.bold))]),
+                                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                    const Icon(Icons.upload_file, color: Color(0xFF1E2A5D), size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(isTamil ? "ஆவணத்தைப் பதிவேற்று" : "Upload Document", style: const TextStyle(color: Color(0xFF1E2A5D), fontWeight: FontWeight.bold))
+                                  ]),
                                   const SizedBox(height: 8),
-                                  Text(isTamil ? "JPG, PNG அல்லது PDF (அதிகபட்சம் 2MB)" : "JPG, PNG or PDF (Max 2MB)", style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                                  Text(isTamil ? "JPG, PNG அல்லது PDF" : "JPG, PNG or PDF", style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                                 ]),
                         ),
                       ),
@@ -143,12 +203,18 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFB732), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)), elevation: 0),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFB732),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(28)),
+                    elevation: 0),
                 onPressed: _next,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(isTamil ? "தொடரவும்" : "Continue", style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(isTamil ? "தொடரவும்" : "Continue",
+                        style: const TextStyle(
+                            color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
                     const Icon(Icons.arrow_forward, color: Colors.black, size: 20),
                   ],

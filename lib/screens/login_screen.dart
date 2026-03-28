@@ -18,6 +18,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _mobileController = TextEditingController();
+  bool _showUnregisteredWarning = false;
 
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
@@ -60,6 +61,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   Future<void> _sendOtp() async {
+    if (_showUnregisteredWarning) {
+      setState(() => _showUnregisteredWarning = false);
+    }
+
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
@@ -78,11 +83,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
 
     if (!userExists) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => RegistrationScreen(mobileNumber: mobile),
-        ),
-      );
+      setState(() {
+        _showUnregisteredWarning = true;
+      });
       return;
     }
 
@@ -147,26 +150,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             SafeArea(
               child: Column(
                 children: [
-                  // --- LANGUAGE SWITCHER ---
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 12.0, top: 8.0),
-                      child: TextButton.icon(
-                        onPressed: () => context.read<LanguageProvider>().toggleLanguage(),
-                        icon: const Icon(Icons.language, color: Colors.white70, size: 18),
-                        label: Text(
-                          isTamil ? "English" : "தமிழ்",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  
+                  const SizedBox(height: 24),
                   // --- GLOWING PROFILE AVATAR ---
                   Container(
                     width: 90,
@@ -300,7 +284,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     _PhoneNumberFormatter(),
                                   ],
                                   decoration: InputDecoration(
-                                    counterText: "",
                                     hintText: "Enter your mobile number",
                                     hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
                                     
@@ -333,6 +316,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       borderSide: const BorderSide(color: Color(0xFF1E2A5D)),
                                     ),
                                   ),
+                                  buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                                    final digitCount = _mobileController.text.replaceAll(RegExp(r'\D'), '').length;
+                                    return Text('$digitCount/10', style: TextStyle(color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.w500));
+                                  },
                                   validator: (value) {
                                     final input = value?.replaceAll(' ', '').trim() ?? "";
                                     if (input.isEmpty) {
@@ -343,8 +330,37 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     }
                                     return null;
                                   },
+                                  onChanged: (value) {
+                                    if (_showUnregisteredWarning) {
+                                      setState(() => _showUnregisteredWarning = false);
+                                    }
+                                  },
                                 ),
                                 
+                                // --- UNREGISTERED WARNING MESSAGE ---
+                                if (_showUnregisteredWarning)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.error_outline, color: Colors.red, size: 14),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            isTamil
+                                                ? "நீங்கள் உறுப்பினராக இல்லை. தயவுசெய்து பதிவு செய்யவும்."
+                                                : "You are not a member. Please register.",
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
                                 const SizedBox(height: 24),
 
                                 // --- GRADIENT BUTTON ---

@@ -16,11 +16,11 @@ class MemberCardScreen extends StatefulWidget {
 }
 
 class _MemberCardScreenState extends State<MemberCardScreen> {
-  // Exact Colors from your uploaded image
-  final Color _maroonHeader = const Color(0xFF1223B3); // Blue Header
-  final Color _yellowText = const Color(0xFFFFD100); // Yellow Text
-  final Color _cardBackground = const Color(0xFFFAF9F6); // Off-white Card bg
-  final Color _textColor = const Color(0xFF2C2C2C);
+  // Colors sampled from your uploaded image
+  final Color _darkBlue = const Color(0xFF1E3264); // Main Theme Color
+  final Color _goldColor = const Color(0xFFD4AF37); // Yellow/Gold accents
+  final Color _cardBackground = const Color(0xFFF9F6EE); // Off-white/Beige
+  final Color _textColor = const Color(0xFF1E3264); // Dark blue text for details
 
   @override
   void initState() {
@@ -65,19 +65,24 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
     }
 
     // Fallback data mapping
-    final effectivePartyName = memberCard?.partyName ?? AppConfig.partyName;
-    final effectiveName = memberCard?.memberName ?? user?.name ?? "N/A";
-    final effectiveMemberId = memberCard?.memberId ?? user?.memberId ?? "N/A";
+    final effectiveName = memberCard?.memberName ?? user?.name ?? "Ijju";
+    final effectiveMemberId = memberCard?.memberId ?? user?.memberId ?? "A26#MDU0001";
     final effectiveMobile = memberCard?.mobileNumber ?? user?.mobile ?? "N/A";
-    final effectiveAddress = memberCard?.address ?? user?.address ?? "N/A";
     
+    // You can replace these with actual API data fields if they exist in your model
+    final effectiveFatherName = "R. Selvapandian"; 
+    final effectiveAge = "23";
+    final effectiveDoj = "01 Jan 2024";
+    final effectiveConstituency = "Kancheepuram";
+    final effectiveDistrict = "Kancheepuram";
+
     final effectiveProfileImagePath = authProvider.profileImagePath;
     final effectiveProfileImageUrl = memberCard?.profileImageUrl;
     final effectiveQr = memberCard?.memberQrPayload ??
         "${AppConfig.partyName}|$effectiveMemberId|$effectiveMobile|$effectiveName";
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade200, // Background behind the card
+      backgroundColor: Colors.grey.shade200,
       appBar: AppBar(
         title: const Text(
           "எனது அடையாள அட்டை",
@@ -95,7 +100,7 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () => context.read<AuthProvider>().fetchMemberCard(),
-        color: _maroonHeader,
+        color: _darkBlue,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -112,148 +117,206 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
 
               // --- THE PHYSICAL CARD UI ---
               Center(
-                // Removed AspectRatio to prevent bottom clipping!
-                // Using a regular Container allows it to grow vertically based on content.
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: _cardBackground,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _darkBlue, width: 2), // Outer Blue Border
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+                        color: Colors.black.withOpacity(0.2),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  clipBehavior: Clip.antiAlias, // Keeps header inside rounded corners
-                  child: Stack(
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // 1. MAIN CONTENT STRUCTURE
-                      Column(
-                        mainAxisSize: MainAxisSize.min, // Hugs content perfectly
-                        children: [
-                          // BLUE HEADER
-                          Container(
-                            height: 60,
-                            width: double.infinity,
-                            color: _maroonHeader,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  effectivePartyName,
-                                  style: TextStyle(
-                                    color: _yellowText,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
+                      // 1. HEADER SECTION (Dark Blue)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _darkBlue,
+                          border: Border(bottom: BorderSide(color: _goldColor, width: 3)), // Inner gold line
+                        ),
+                        child: Row(
+                          children: [
+                            // Small Leader Portraits (Placeholders)
+                            _buildLeaderPortraits(),
+                            const SizedBox(width: 8),
+                            // Party Title & Subtitle
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "ஆயர் புரட்சி கழகம்",
+                                    style: TextStyle(
+                                      color: _goldColor,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                                const SizedBox(height: 6), // Push text up slightly for badge
-                              ],
-                            ),
-                          ),
-
-                          // BODY SECTION
-                          Padding(
-                            // Added plenty of padding at the bottom so QR code doesn't touch the edge
-                            padding: const EdgeInsets.only(
-                              left: 12,
-                              right: 12,
-                              top: 24, // Space for the overlapping badge
-                              bottom: 20, 
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start, // Align to top
-                              children: [
-                                // LEFT COLUMN: Photo & QR
-                                SizedBox(
-                                  width: 75,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      // Profile Image Box
-                                      Container(
-                                        height: 80,
-                                        width: 75,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.black87, width: 1.5),
-                                          color: Colors.grey.shade300,
-                                        ),
-                                        child: _buildProfileImage(
-                                          context,
-                                          localPath: effectiveProfileImagePath,
-                                          remoteUrl: effectiveProfileImageUrl,
+                                      Container(height: 1, width: 20, color: _goldColor),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        "கோனார் - வன்னியர் - அமைப்பு",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      const SizedBox(height: 10),
-                                      // QR Code
-                                      Container(
-                                        padding: const EdgeInsets.all(2),
-                                        color: Colors.white,
-                                        child: QrImageView(
-                                          data: effectiveQr,
-                                          version: QrVersions.auto,
-                                          size: 65,
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(height: 1, width: 20, color: _goldColor),
                                     ],
                                   ),
-                                ),
-
-                                const SizedBox(width: 16),
-
-                                // CENTER COLUMN: Details
-                                Expanded(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 6),
-                                      _buildAlignedRow("பெயர்", effectiveName),
-                                      const SizedBox(height: 12),
-                                      _buildAlignedRow("அலைபேசி", effectiveMobile),
-                                      const SizedBox(height: 12),
-                                      _buildAlignedRow("முகவரி", effectiveAddress),
-                                      const SizedBox(height: 12),
-                                      _buildAlignedRow("மாவட்டம்", "மதுரை"), // Placeholder District
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // 2. MEMBER CARD BADGE (Overlapping header)
-                      Positioned(
-                        top: 48, // Intersects the blue header and white body perfectly
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.black87, width: 1),
-                            ),
-                            child: const Text(
-                              "உறுப்பினர் அட்டை",
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.black87,
+                                ],
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+                      ),
+
+                      // 2. BODY SECTION (Off-white / Details)
+                      Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Left: Profile Photo
+                                Container(
+                                  width: 90,
+                                  height: 110,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: _goldColor, width: 2),
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: _buildProfileImage(
+                                    context,
+                                    localPath: effectiveProfileImagePath,
+                                    remoteUrl: effectiveProfileImageUrl,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                
+                                // Center: Text Details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildDetailText("Name: ", effectiveName, isBold: true),
+                                      const SizedBox(height: 4),
+                                      _buildDetailText("Father's Name: ", effectiveFatherName),
+                                      const SizedBox(height: 4),
+                                      _buildDetailText("Age: ", effectiveAge),
+                                      const SizedBox(height: 4),
+                                      _buildDetailText("Date of Joining: ", effectiveDoj),
+                                      const SizedBox(height: 4),
+                                      _buildDetailText("Constituency: ", effectiveConstituency),
+                                      const SizedBox(height: 4),
+                                      _buildDetailText("District: ", effectiveDistrict),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+
+                                // Right: QR Code
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: QrImageView(
+                                    data: effectiveQr,
+                                    version: QrVersions.auto,
+                                    size: 65,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Membership ID Pill
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(color: Colors.grey.shade400, width: 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: _darkBlue,
+                                      borderRadius: const BorderRadius.horizontal(left: Radius.circular(30)),
+                                    ),
+                                    child: const Text(
+                                      "Membership ID",
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: const BorderRadius.horizontal(right: Radius.circular(30)),
+                                    ),
+                                    child: Text(
+                                      effectiveMemberId,
+                                      style: TextStyle(color: _darkBlue, fontWeight: FontWeight.bold, fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 3. FOOTER SECTION (Dark Blue)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        decoration: BoxDecoration(
+                          color: _darkBlue,
+                          border: Border(top: BorderSide(color: _goldColor, width: 3)), // Inner gold line
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              "இயக்கத்தின் அலுவலகம்: 261, எச்.என்.எச்.சாலை, கோமாப்பாட்டன், சென்னை - 600102",
+                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            // Social Media Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildSocialItem(Icons.camera_alt, "konar_youth_leader", Colors.pinkAccent),
+                                _buildSocialItem(Icons.facebook, "konaryouthofficial", Colors.blueAccent),
+                                _buildSocialItem(Icons.flutter_dash, "KonarYouthOrg", Colors.lightBlue), // Placeholder for Twitter
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -278,45 +341,69 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
     );
   }
 
-  // Helper to create the perfectly aligned colon layout
-Widget _buildAlignedRow(String label, String value) {
+  // Helper for the inline Text Details (Label: Value)
+  Widget _buildDetailText(String label, String value, {bool isBold = false}) {
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(
+          fontSize: 12,
+          color: _textColor,
+          height: 1.4, // Good line spacing
+        ),
+        children: [
+          TextSpan(
+            text: label,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          TextSpan(
+            text: value,
+            style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.w500, fontSize: isBold ? 14 : 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper for the Social Media footer row
+  Widget _buildSocialItem(IconData icon, String handle, Color iconColor) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          width: 85, // <-- CHANGED FROM 70 TO 85
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: _textColor,
-            ),
-          ),
-        ),
+        Icon(icon, color: iconColor, size: 14),
+        const SizedBox(width: 4),
         Text(
-          " :   ",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            color: _textColor,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-              color: _textColor,
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
+          handle,
+          style: const TextStyle(color: Colors.white, fontSize: 9),
         ),
       ],
     );
   }
+
+  // Helper to generate the 5 overlapping/adjacent small leader portraits in the header
+  Widget _buildLeaderPortraits() {
+    // Note: Replace these Image.assets with your actual leader images. 
+    // Using simple colored circles with person icons as placeholders.
+    return SizedBox(
+      width: 70, // Constraints for the small group
+      child: Wrap(
+        spacing: 2,
+        runSpacing: 2,
+        children: List.generate(5, (index) {
+          return Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: _goldColor, width: 1),
+              color: Colors.grey.shade400,
+            ),
+            child: const Icon(Icons.person, size: 12, color: Colors.white),
+          );
+        }),
+      ),
+    );
+  }
+
   Widget _buildProfileImage(BuildContext context, {String? localPath, String? remoteUrl}) {
     Widget fallback() => const Icon(Icons.person, size: 40, color: Colors.grey);
 
