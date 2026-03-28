@@ -24,59 +24,222 @@ class EditProfilePage extends StatelessWidget {
           children: [
             const SizedBox(height: 10),
 
-            // 🔷 HEADER CARD
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _headerCard(),
+            // 🔷 HEADER
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
+                    ),
+                  ),
+                ),
+
+                // 🧑 PROFILE IMAGE (NO WHITE BORDER)
+                Positioned(
+                  top: 50,
+                  child: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      // 🔥 OUTER GLOW
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFFC107)
+                                  .withOpacity(0.6),
+                              blurRadius: 40,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(5), // ring thickness
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFFFE082),
+                                Color(0xFFF9A825),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 48,
+                            backgroundImage: NetworkImage(
+                              "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // 📷 CAMERA ICON
+                      Positioned(
+                        bottom: 4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFF3E0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 18,
+                            color: Color(0xFF1E2A78),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 🔘 BUTTONS
+                Positioned(
+                  bottom: -25,
+                  left: 40,
+                  right: 40,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _headerBtn(Icons.camera_alt, "Take Photo"),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _headerBtn(Icons.image, "Gallery"),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 50),
 
-            // 🔥 BASE CARD (OUTER LAYER)
+            // 🔥 FORM CARD
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF1F7), // light grey base
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // ✅ MOBILE NUMBER (FIGMA STYLE)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Mobile Number",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 50,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Color(0xFFE5E7EB),
+                            ),
+                          ),
+                          child: Row(
+                            children: const [
+                              Icon(Icons.phone,
+                                  size: 20,
+                                  color: Color(0xFF1E2A78)),
+                              SizedBox(width: 10),
+                              Text(
+                                "9876543210",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // OTHER FIELDS
+                    _label("Full Name"),
+                    _inputField(Icons.person, "Arjun Kumar"),
+
+                    const SizedBox(height: 16),
+
+                    _label("Date of Birth"),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _inputField(
+                              Icons.calendar_today, "15 Mar 2001"),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _dropdownField("25"),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    _label("Gender"),
+                    _dropdownField("Male", icon: Icons.person),
+
+                    const SizedBox(height: 16),
+
+                    _label("Blood Group"),
+                    _dropdownField("O+", icon: Icons.bloodtype),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 🔘 UPDATE BUTTON
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                height: 55,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFDB913), Color(0xFFF59E0B)],
+                  ),
                   borderRadius: BorderRadius.circular(30),
                 ),
-
-                // 🔲 INNER WHITE CARD
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                  child: Column(
-                    children: [
-                      _smallCard(Icons.phone, "Mobile Number", "9876543210"),
-
-                      _smallCard(Icons.person, "Full Name", "Arjun Kumar",
-                          isActive: true),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _smallCard(Icons.calendar_today,
-                                "Date of Birth", "15 Mar 2001"),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(child: _ageCard()),
-                        ],
-                      ),
-
-                      _smallCard(Icons.person, "Gender", "Male",
-                          isDropdown: true),
-
-                      _smallCard(Icons.bloodtype, "Blood Group", "O+",
-                          isDropdown: true),
-
-                      const SizedBox(height: 10),
-
-                      _buttonCard(),
-                    ],
+                alignment: Alignment.center,
+                child: const Text(
+                  "Update Profile",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -89,170 +252,64 @@ class EditProfilePage extends StatelessWidget {
     );
   }
 
-  // 🔷 HEADER CARD
-  Widget _headerCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFDB913).withOpacity(0.7),
-                      blurRadius: 25,
-                      spreadRadius: 4,
-                    )
-                  ],
-                ),
-                child: const CircleAvatar(
-                  radius: 45,
-                  backgroundImage: NetworkImage(
-                    "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-                  ),
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.camera_alt, size: 16),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _headerBtn(Icons.camera_alt, "Take Photo"),
-              const SizedBox(width: 12),
-              _headerBtn(Icons.image, "Gallery"),
-            ],
-          ),
-        ],
-      ),
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
     );
   }
 
-  // 🔲 SMALL CARD
-  Widget _smallCard(IconData icon, String label, String value,
-      {bool isActive = false, bool isDropdown = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7F8FC),
-          borderRadius: BorderRadius.circular(18),
-          border: isActive
-              ? Border.all(color: const Color(0xFFFDB913), width: 1.5)
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF1E2A78)),
-            const SizedBox(width: 10),
-
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 11, color: Colors.grey)),
-                  const SizedBox(height: 2),
-                  Text(value,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                        color: Color(0xFF1E2A78),
-                      )),
-                ],
-              ),
-            ),
-
-            if (isDropdown)
-              const Icon(Icons.keyboard_arrow_down),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 🔢 AGE CARD
-  Widget _ageCard() {
+  Widget _inputField(IconData icon, String value) {
     return Container(
-      height: 70,
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F8FC),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        "25",
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1E2A78),
-        ),
-      ),
-    );
-  }
-
-  // 🔘 BUTTON CARD
-  Widget _buttonCard() {
-    return Container(
-      height: 55,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFDB913), Color(0xFFF59E0B)],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.withOpacity(0.3),
-            blurRadius: 10,
-          )
-        ],
-      ),
-      alignment: Alignment.center,
-      child: const Text(
-        "Update Profile",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
-
-  // 🔘 HEADER BUTTON
-  Widget _headerBtn(IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.white),
+          Icon(icon, size: 20, color: const Color(0xFF1E2A78)),
+          const SizedBox(width: 10),
+          Text(value),
+        ],
+      ),
+    );
+  }
+
+  Widget _dropdownField(String value, {IconData? icon}) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          if (icon != null)
+            Icon(icon, size: 20, color: const Color(0xFF1E2A78)),
+          if (icon != null) const SizedBox(width: 10),
+          Expanded(child: Text(value)),
+          const Icon(Icons.keyboard_arrow_down),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerBtn(IconData icon, String text) {
+    return Container(
+      height: 45,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F2F6),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF1E2A78)),
           const SizedBox(width: 6),
-          Text(text, style: const TextStyle(color: Colors.white)),
+          Text(text),
         ],
       ),
     );

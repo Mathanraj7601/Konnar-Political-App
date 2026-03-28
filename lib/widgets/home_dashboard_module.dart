@@ -9,7 +9,7 @@ class HomeDashboardModule extends StatelessWidget {
 
   static const _actions = [
     _ActionItem(label: 'View Card', icon: Icons.credit_card, color: Color(0xFF1E2A78)),
-    _ActionItem(label: 'Announcements', icon: Icons.groups, color: Color(0xFF1E2A78)),
+    _ActionItem(label: 'Members', icon: Icons.groups, color: Color(0xFF1E2A78)),
     _ActionItem(label: 'Updates', icon: Icons.arrow_forward_ios, color: Color(0xFFF6A800)),
     _ActionItem(label: 'Events', icon: Icons.diamond, color: Color(0xFFCB2C2C)),
   ];
@@ -19,6 +19,7 @@ class HomeDashboardModule extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -27,7 +28,7 @@ class HomeDashboardModule extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    height: 200,
+                    height: 220,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -36,7 +37,7 @@ class HomeDashboardModule extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                    padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
@@ -60,8 +61,9 @@ class HomeDashboardModule extends StatelessWidget {
                     ),
                   ),
 
+                  // 🧑 PROFILE CARD (FIXED POSITION)
                   Positioned(
-                    bottom: -90,
+                    bottom: -100, // 🔥 moved down
                     left: 16,
                     right: 16,
                     child: _buildProfileCard(),
@@ -69,7 +71,7 @@ class HomeDashboardModule extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 110),
+              const SizedBox(height: 120), // 🔥 adjusted spacing
 
               // ⚪ CONTENT
               Padding(
@@ -136,7 +138,11 @@ class HomeDashboardModule extends StatelessWidget {
           const SizedBox(height: 12),
           const Text(
             _profileName,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E2A78),
+            ),
           ),
           const SizedBox(height: 4),
           const Text(
@@ -148,7 +154,7 @@ class HomeDashboardModule extends StatelessWidget {
     );
   }
 
-  // 🔲 ACTION GRID (UPDATED)
+  // 🔲 ACTION GRID
   Widget _buildActionGrid(BuildContext context) {
     return GridView.builder(
       itemCount: _actions.length,
@@ -185,7 +191,6 @@ class HomeDashboardModule extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 🔷 ICON BOX (Figma Style)
                 Container(
                   width: 42,
                   height: 42,
@@ -199,9 +204,7 @@ class HomeDashboardModule extends StatelessWidget {
                     color: Colors.white,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 Text(
                   action.label,
                   style: const TextStyle(
@@ -217,7 +220,7 @@ class HomeDashboardModule extends StatelessWidget {
     );
   }
 
-  // 📢 ANNOUNCEMENTS (UPDATED)
+  // 📢 ANNOUNCEMENTS
   Widget _buildAnnouncementsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,10 +262,10 @@ class HomeDashboardModule extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {},
-                  style: TextButton.styleFrom(
-                    foregroundColor: const Color(0xFF1E2A78),
+                  child: const Text(
+                    'Read More >',
+                    style: TextStyle(color: Color(0xFF1E2A78)),
                   ),
-                  child: const Text('Read More >'),
                 ),
               ),
             ],
