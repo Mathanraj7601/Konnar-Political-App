@@ -30,6 +30,7 @@ class PersonalInfoScreen extends StatefulWidget {
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _mobileController;
   final _dobController = TextEditingController();
   final _ageController = TextEditingController();
   final _imagePicker = ImagePicker();
@@ -53,6 +54,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialName ?? '');
+    _mobileController = TextEditingController(text: widget.mobileNumber);
   }
 
   Future<void> _pickDob() async {
@@ -130,7 +132,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
     final draft = RegistrationDraft(
       name: _nameController.text.trim(),
-      mobile: widget.mobileNumber,
+      mobile: _mobileController.text.trim(),
       dob: _selectedDob!,
       age: age,
       profileImagePath: _profileImagePath,
@@ -143,6 +145,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _mobileController.dispose();
     _dobController.dispose();
     _ageController.dispose();
     super.dispose();
@@ -392,6 +395,25 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           controller: _nameController,
                           decoration: _inputDeco(Icons.person),
                           validator: (val) => (val?.trim() ?? "").length < 3 ? "Required" : null,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildFieldLayout(
+                        isTamil ? "மொபைல் எண்" : "Mobile Number",
+                        TextFormField(
+                          controller: _mobileController,
+                          keyboardType: TextInputType.number,
+                          maxLength: 10,
+                          decoration: _inputDeco(Icons.phone).copyWith(counterText: ""),
+                          validator: (val) {
+                            final input = val?.trim() ?? "";
+                            if (input.isEmpty) return isTamil ? "தேவை" : "Required";
+                            if (!RegExp(r"^\d{10}$").hasMatch(input)) {
+                              return isTamil ? "சரியான எண்ணை உள்ளிடவும்" : "Invalid Number";
+                            }
+                            return null;
+                          },
                         ),
                       ),
                       const SizedBox(height: 16),
