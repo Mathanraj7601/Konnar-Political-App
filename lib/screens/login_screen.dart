@@ -5,10 +5,6 @@ import "package:provider/provider.dart";
 import "../config/app_config.dart";
 import "../providers/auth_provider.dart";
 import "../providers/language_provider.dart";
-import "../theme/app_theme.dart";
-import "../widgets/alternating_word_text.dart";
-import "../widgets/app_text_field.dart";
-import "../widgets/primary_button.dart";
 import "otp_verification_screen.dart";
 import "registration_screen.dart";
 
@@ -81,7 +77,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       return;
     }
 
-    // Navigate to registration if user doesn't exist
     if (!userExists) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -91,7 +86,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       return;
     }
 
-    // User exists - proceed with OTP flow
     final success = await authProvider.sendOtp(mobile);
     if (!mounted) return;
 
@@ -106,9 +100,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     final debugOtp = authProvider.debugOtp;
     if (debugOtp != null && debugOtp.isNotEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Demo OTP: $debugOtp"))
+      );
     }
 
     Navigator.of(context).push(
@@ -128,278 +122,305 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final langProvider = context.watch<LanguageProvider>();
-    final isTamil = langProvider.isTamil;
+    final isTamil = context.watch<LanguageProvider>().isTamil;
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF8FAFC,
-      ), // Very light modern slate-blue tinted background
+      backgroundColor: const Color(0xFFF8F9FA), // Matched light background
       body: SingleChildScrollView(
         child: Stack(
           children: [
-            // --- ENHANCED BACKGROUND DESIGN ---
+            // --- DEEP BLUE CURVED BACKGROUND ---
             Container(
-              height: size.height * 0.42,
+              height: size.height * 0.48, // Slightly adjusted for better proportion
               width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primary,
-                    AppTheme.primary.withValues(alpha: 0.85),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(50),
-                  bottomRight: Radius.circular(50),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-            ),
-            // Decorative Background Circles
-            Positioned(
-              top: -40,
-              right: -40,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 100,
-              left: -50,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.05),
+              decoration: const BoxDecoration(
+                color: Color(0xFF142C8E), // Deep royal blue
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(35), // Smoother curve
+                  bottomRight: Radius.circular(35),
                 ),
               ),
             ),
 
             // --- FOREGROUND CONTENT ---
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 10.0,
-                ),
-                child: Column(
-                  children: [
-                    // --- LANGUAGE SWITCHER ---
-                    Align(
-                      alignment: Alignment.topRight,
+              child: Column(
+                children: [
+                  // --- LANGUAGE SWITCHER ---
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12.0, top: 8.0),
                       child: TextButton.icon(
-                        onPressed: () => langProvider.toggleLanguage(),
-                        icon: const Icon(Icons.language, color: Colors.white, size: 20),
+                        onPressed: () => context.read<LanguageProvider>().toggleLanguage(),
+                        icon: const Icon(Icons.language, color: Colors.white70, size: 18),
                         label: Text(
                           isTamil ? "English" : "தமிழ்",
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Enhanced Profile Avatar with glowing borders
-                    Container(
-                      width: 110,
-                      height: 110,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          width: 2,
-                        ),
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            AppConfig.profileImageAsset,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                                  color: AppTheme.secondary.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                  child: const Icon(
-                                    Icons.person,
-                                    color: AppTheme.primary,
-                                    size: 50,
-                                  ),
-                                ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Title
-                    AlternatingWordText(
-                      text: AppConfig.partyName,
-                      firstColor: Colors.white,
-                      secondColor: AppTheme.secondary,
-                      style: const TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
+                  ),
+                  
+                  // --- GLOWING PROFILE AVATAR ---
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFFD700), // Gold border
+                        width: 2.5,
                       ),
-                      textAlign: TextAlign.center,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD700).withOpacity(0.4), // Soft Gold glow
+                          blurRadius: 20,
+                          spreadRadius: 4,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      isTamil ? "உறுப்பினர் தளம்" : "Member Portal",
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.2,
+                    child: ClipOval(
+                      child: Image.asset(
+                        AppConfig.profileImageAsset, // Ensure this path is correct
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                              color: Colors.white,
+                              child: const Icon(
+                                Icons.person,
+                                color: Color(0xFF142C8E),
+                                size: 45,
+                              ),
+                            ),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // --- BULL LOGO ---
+                  const Icon(
+                    Icons.pest_control_rodent_outlined, // Placeholder - Swap with your asset!
+                    color: Color(0xFFFFD700),
+                    size: 45,
+                  ),
+                  
+                  const SizedBox(height: 8),
 
-                    // --- ENHANCED FLOATING FORM CARD ---
-                    FadeTransition(
+                  // --- TITLES ---
+                  const Text(
+                    "ஆயர் புரட்சி கழகம்",
+                    style: TextStyle(
+                      color: Color(0xFFFFD700), // Gold text
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "ஒற்றுமை • வளர்ச்சி • சக்தி",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 35),
+
+                  // --- WHITE LOGIN CARD ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: FadeTransition(
                       opacity: _fadeAnimation,
                       child: SlideTransition(
                         position: _slideAnimation,
                         child: Container(
-                          padding: const EdgeInsets.all(32),
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(32),
+                            borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
-                                blurRadius: 30,
-                                spreadRadius: 5,
-                                offset: const Offset(0, 15),
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 24,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 10),
                               ),
                             ],
                           ),
                           child: Form(
                             key: _formKey,
+                            autovalidateMode: AutovalidateMode.onUserInteraction,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primary.withValues(
-                                          alpha: 0.1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: const Icon(
-                                        Icons.lock_person_rounded,
-                                        color: AppTheme.primary,
-                                        size: 22,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                  Text(
-                                    isTamil ? "பாதுகாப்பான உள்நுழைவு" : "Secure Login",
-                                      style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  isTamil ? "தொடர உங்கள் பதிவு செய்யப்பட்ட அலைபேசி எண்ணை உள்ளிடவும்" : "Enter your registered mobile number to continue",
+                                const Text(
+                                  "Welcome Back",
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade500,
-                                    height: 1.4,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
                                   ),
                                 ),
-                                const SizedBox(height: 32),
-    
-                                AppTextField(
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Sign in to your member account",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                
+                                const Text(
+                                  "Mobile Number",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // --- EXACT TEXT FIELD MATCH ---
+                                TextFormField(
                                   controller: _mobileController,
-                                  label: isTamil ? "அலைபேசி எண்" : "Mobile Number",
-                                  hintText: isTamil ? "10 இலக்க எண்ணை உள்ளிடவும்" : "Enter 10-digit number",
-                                  prefixIcon: Icons.phone_android_rounded,
                                   keyboardType: TextInputType.number,
-                              maxLength: 11, // 10 digits + 1 space
+                                  maxLength: 11,
                                   inputFormatters: [
-                                FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
-                                _PhoneNumberFormatter(),
+                                    FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
+                                    _PhoneNumberFormatter(),
                                   ],
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    hintText: "Enter your mobile number",
+                                    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                                    
+                                    // ADDED: The specific light-blue background behind the phone icon
+                                    prefixIcon: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE8EEFF), // Light blue background
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(Icons.phone, color: Color(0xFF1E2A5D), size: 16),
+                                      ),
+                                    ),
+                                    
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade200),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade200),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF1E2A5D)),
+                                    ),
+                                  ),
                                   validator: (value) {
-                                final input = value?.replaceAll(' ', '').trim() ?? "";
-                                    if (input.isEmpty)
-                                      return isTamil ? "அலைபேசி எண் தேவை" : "Mobile number is required";
-                                    if (!RegExp(r"^\d{10}$").hasMatch(input))
-                                      return isTamil ? "சரியான 10 இலக்க எண்ணை உள்ளிடவும்" : "Enter a valid 10-digit mobile number";
+                                    final input = value?.replaceAll(' ', '').trim() ?? "";
+                                    if (input.isEmpty) {
+                                      return isTamil ? "மொபைல் எண் தேவை" : "Mobile number is required";
+                                    }
+                                    if (!RegExp(r"^\d{10}$").hasMatch(input)) {
+                                      return isTamil ? "சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும்" : "Enter a valid 10-digit mobile number";
+                                    }
                                     return null;
                                   },
                                 ),
-                                const SizedBox(height: 32),
-    
-                                SizedBox(
+                                
+                                const SizedBox(height: 24),
+
+                                // --- GRADIENT BUTTON ---
+                                Container(
                                   width: double.infinity,
-                                  child: PrimaryButton(
-                                    label: isTamil ? "OTP-ஐ அனுப்பு" : "Send OTP",
-                                    icon: Icons.arrow_forward_rounded,
-                                    isLoading: authProvider.isLoading,
-                                    onPressed: _sendOtp,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(26),
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFCC33), // Lighter Yellow
+                                        Color(0xFFFFB020), // Darker Orange/Amber
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: authProvider.isLoading ? null : _sendOtp,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(26),
+                                      ),
+                                    ),
+                                    child: authProvider.isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(color: Colors.black87, strokeWidth: 2),
+                                          )
+                                        : const Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.arrow_forward, color: Colors.black87, size: 18),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                "Send OTP",
+                                                style: TextStyle(
+                                                  color: Colors.black87,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                
+                                const SizedBox(height: 24),
+                                
+                                // --- FOOTER RICH TEXT ---
                                 Center(
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    children: [
-                                      Text(
-                                        isTamil ? "உறுப்பினர் கணக்கு இல்லையா? " : "Don't have a member account? ",
+                                  child: GestureDetector(
+                                    onTap: _goToRegistration,
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: "Don't have an account? ",
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey.shade600,
+                                          color: Colors.grey.shade500,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                      ),
-                                      GestureDetector(
-                                        onTap: _goToRegistration,
-                                        child: Text(
-                                          isTamil ? "புதிய உறுப்பினரை உருவாக்கு" : "Create New Member",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                            decoration: TextDecoration.underline,
+                                        children: const [
+                                          TextSpan(
+                                            text: "Create New Member",
+                                            style: TextStyle(
+                                              color: Color(0xFF1E2A5D), // Dark Blue
+                                              fontWeight: FontWeight.bold,
+                                              decoration: TextDecoration.underline,
+                                            ),
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ],
@@ -408,31 +429,32 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 30),
-                    // Footer Security Badge
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shield_rounded,
-                          size: 16,
-                          color: Colors.grey.shade400,
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // --- SECURITY BADGE ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.shield, // Filled shield fits design better
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Secured with 256-bit encryption",
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isTamil ? "256-பிட் குறியாக்கத்தால் பாதுகாக்கப்படுகிறது" : "Secured by 256-bit encryption",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ),
             ),
           ],
@@ -442,7 +464,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 }
 
-/// Custom TextInputFormatter to format the mobile number as "XXXXX XXXXX"
 class _PhoneNumberFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

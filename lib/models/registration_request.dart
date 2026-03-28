@@ -4,10 +4,17 @@ class RegistrationRequest {
   final String name;
   final String mobile;
   final DateTime dob;
+  final String gender;
+  final String? bloodGroup;
+  final String fatherName;
+  final String? voterId;
+  final String? aadhaarNumber;
   final String street;
   final String doorNumber;
   final String village;
   final String taluk;
+  final String district;
+  final String state;
   final String pincode;
   final String verificationToken;
 
@@ -15,10 +22,17 @@ class RegistrationRequest {
     required this.name,
     required this.mobile,
     required this.dob,
+    required this.gender,
+    this.bloodGroup,
+    required this.fatherName,
+    this.voterId,
+    this.aadhaarNumber,
     required this.street,
     required this.doorNumber,
     required this.village,
     required this.taluk,
+    required this.district,
+    required this.state,
     required this.pincode,
     required this.verificationToken,
   });
@@ -28,10 +42,17 @@ class RegistrationRequest {
       "name": name,
       "mobile": mobile,
       "dob": DateFormat("yyyy-MM-dd").format(dob),
+      "gender": gender,
+      if (bloodGroup != null && bloodGroup!.isNotEmpty) "blood_group": bloodGroup,
+      "father_name": fatherName,
+      if (voterId != null && voterId!.isNotEmpty) "voter_id": voterId,
+      if (aadhaarNumber != null && aadhaarNumber!.isNotEmpty) "aadhaar_number": aadhaarNumber,
       "street": street,
       "door_number": doorNumber,
       "village": village,
       "taluk": taluk,
+      "district": district,
+      "state": state,
       "pincode": pincode,
       "verification_token": verificationToken,
     };

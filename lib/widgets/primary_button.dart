@@ -5,6 +5,8 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final IconData? icon;
+  final Color? backgroundColor;
+  final Color? foregroundColor;
 
   const PrimaryButton({
     super.key,
@@ -12,6 +14,8 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.icon,
+    this.backgroundColor,
+    this.foregroundColor,
   });
 
   @override
@@ -21,13 +25,12 @@ class PrimaryButton extends StatelessWidget {
       height: 52,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Theme.of(context).colorScheme.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        style: Theme.of(context).elevatedButtonTheme.style?.copyWith(
+              backgroundColor: WidgetStateProperty.all(
+                  backgroundColor ?? Theme.of(context).colorScheme.primary),
+              foregroundColor: WidgetStateProperty.all(
+                  foregroundColor ?? Theme.of(context).colorScheme.onPrimary),
+            ),
         child: isLoading
             ? SizedBox(
                 width: 20,
@@ -45,7 +48,7 @@ class PrimaryButton extends StatelessWidget {
                   if (icon != null) ...[Icon(icon), const SizedBox(width: 8)],
                   Text(
                     label,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                   ),
                 ],
               ),

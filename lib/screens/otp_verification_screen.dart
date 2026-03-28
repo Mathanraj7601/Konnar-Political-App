@@ -1,360 +1,373 @@
-import "dart:async";
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
 
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:provider/provider.dart";
-
-import "../config/app_config.dart";
-import "../providers/auth_provider.dart";
-import "../providers/language_provider.dart";
-import "home_screen.dart";
-import "personal_info_screen.dart";
+import '../models/registration_draft.dart';
+import '../models/registration_request.dart';
+import '../providers/auth_provider.dart';
+import '../providers/language_provider.dart';
+import 'member_card_screen.dart';
+import 'registration_screen.dart';
+import 'registration_success_screen.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String mobileNumber;
-  final String? prefilledName;
+  final RegistrationDraft? draft;
 
-  const OtpVerificationScreen({
-    super.key,
-    required this.mobileNumber,
-    this.prefilledName,
-  });
+  const OtpVerificationScreen({super.key, required this.mobileNumber, this.draft});
 
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _otpController = TextEditingController();
-  final FocusNode _otpFocusNode = FocusNode();
-
+  final TextEditingController _otpController = TextEditingController();
+  
   Timer? _timer;
-  int _remainingSeconds = AppConfig.otpExpirySeconds;
-
-  // Exact Colors from your previous yellow theme mockup
-  final Color _yellowTheme = const Color(0xFFFFBF43);
+  int _start = 35; // Countdown start time
+  final int _maxTime = 35;
+  bool _isResendEnabled = false;
+  bool _isVerifying = false;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
-    // Add listener to update custom OTP boxes when user types
-    _otpController.addListener(() {
-      if (mounted) setState(() {});
-    });
-    
-    // Auto-focus the OTP field when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusScope.of(context).requestFocus(_otpFocusNode);
-    });
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _remainingSeconds = AppConfig.otpExpirySeconds;
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds <= 1) {
-        timer.cancel();
-        if (mounted) setState(() => _remainingSeconds = 0);
-        return;
-      }
-      if (mounted) setState(() => _remainingSeconds -= 1);
-    });
-  }
-
-  String _formatTimer(int totalSeconds) {
-    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, "0");
-    final seconds = (totalSeconds % 60).toString().padLeft(2, "0");
-    return "$minutes:$seconds";
-  }
-
-  Future<void> _verifyOtp() async {
-    final isTamil = context.read<LanguageProvider>().isTamil;
-    final otpText = _otpController.text.trim();
-    if (otpText.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isTamil ? "சரியான 6-இலக்க OTP-ஐ உள்ளிடவும்" : "Please enter a valid 6-digit OTP")),
-      );
-      return;
-    }
-
-    final authProvider = context.read<AuthProvider>();
-    final response = await authProvider.verifyOtp(
-      mobile: widget.mobileNumber,
-      otp: otpText,
-    );
-
-    if (!mounted) return;
-
-    if (response == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "OTP சரிபார்ப்பு தோல்வியடைந்தது" : "OTP verification failed"))),
-      );
-      return;
-    }
-
-    if (response.isNewUser) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => PersonalInfoScreen(
-            mobileNumber: widget.mobileNumber,
-            initialName: widget.prefilledName,
-          ),
-        ),
-      );
-      return;
-    }
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-      (route) => false,
-    );
-  }
-
-  Future<void> _resendOtp() async {
-    final isTamil = context.read<LanguageProvider>().isTamil;
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.sendOtp(widget.mobileNumber);
-
-    if (!mounted) return;
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "OTP-ஐ மீண்டும் அனுப்ப முடியவில்லை" : "Could not resend OTP"))),
-      );
-      return;
-    }
-
-    _otpController.clear();
-    _startTimer();
-    FocusScope.of(context).requestFocus(_otpFocusNode);
-
-    final debugOtp = authProvider.debugOtp;
-    if (debugOtp != null && debugOtp.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isTamil ? "மாதிரி OTP: $debugOtp" : "Demo OTP: $debugOtp")));
-    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _otpController.dispose();
-    _otpFocusNode.dispose();
     super.dispose();
   }
 
-  // Custom widget to draw each digit box
-  Widget _buildOtpBox(int index) {
-    final text = _otpController.text;
-    final isFocused = _otpFocusNode.hasFocus && text.length == index;
-    final hasData = text.length > index;
-    final digit = hasData ? text[index] : "";
+  void _startTimer() {
+    setState(() {
+      _start = _maxTime;
+      _isResendEnabled = false;
+    });
+    
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_start == 0) {
+        setState(() {
+          _isResendEnabled = true;
+          timer.cancel();
+        });
+      } else {
+        setState(() {
+          _start--;
+        });
+      }
+    });
+  }
 
-    return Container(
-      width: 48,
-      height: 56,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isFocused 
-              ? Colors.black87 
-              : hasData 
-                  ? Colors.grey.shade500 
-                  : Colors.grey.shade300,
-          width: isFocused ? 2 : 1.5,
-        ),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        digit,
-        style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: Colors.black87,
-        ),
-      ),
-    );
+  Future<void> _verifyOtp() async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
+    final otp = _otpController.text;
+    
+    if (otp.length == 6) {
+      setState(() => _isVerifying = true);
+      final authProvider = context.read<AuthProvider>();
+      final response = await authProvider.verifyOtp(mobile: widget.mobileNumber, otp: otp);
+      
+      if (!mounted) return;
+      
+      if (response != null) {
+        if (response.isNewUser && widget.draft != null) {
+          // --- REGISTRATION FLOW ---
+          final request = RegistrationRequest(
+            name: widget.draft!.name,
+            mobile: widget.draft!.mobile,
+            dob: widget.draft!.dob!,
+            gender: widget.draft!.gender ?? 'Male',
+            bloodGroup: widget.draft!.bloodGroup,
+            fatherName: widget.draft!.fatherName ?? '',
+            voterId: widget.draft!.voterId,
+            aadhaarNumber: widget.draft!.aadhaarNumber,
+            street: widget.draft!.street!,
+            doorNumber: widget.draft!.doorNumber!,
+            village: widget.draft!.village!,
+            taluk: widget.draft!.constituency!,
+            district: widget.draft!.district!,
+            state: widget.draft!.state ?? 'Tamil Nadu',
+            pincode: widget.draft!.pincode!,
+            verificationToken: authProvider.registrationVerificationToken!,
+          );
+          authProvider.setProfileImagePath(widget.draft!.profileImagePath);
+          
+          final success = await authProvider.registerMember(request);
+          if (!mounted) return;
+          
+          setState(() => _isVerifying = false);
+          
+          if (success) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => RegistrationSuccessScreen(memberId: authProvider.currentUser?.memberId ?? 'UNKNOWN')),
+              (route) => false,
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "பதிவு தோல்வியடைந்தது" : "Registration Failed"))));
+          }
+        } else if (!response.isNewUser) {
+          // --- LOGIN FLOW ---
+          setState(() => _isVerifying = false);
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const MemberCardScreen()),
+            (route) => false,
+          );
+        } else {
+          // Edge case: Logged in as unregistered user, but no draft available
+          setState(() => _isVerifying = false);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => RegistrationScreen(mobileNumber: widget.mobileNumber)),
+          );
+        }
+      } else {
+        setState(() => _isVerifying = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "தவறான OTP" : "Invalid OTP"))));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isTamil ? "6 இலக்க OTP ஐ உள்ளிடவும்" : "Please enter the 6-digit OTP")),
+      );
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    final isTamil = context.read<LanguageProvider>().isTamil;
+    final authProvider = context.read<AuthProvider>();
+    
+    final success = await authProvider.sendOtp(widget.mobileNumber);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      _otpController.clear();
+      _startTimer();
+      final debugOtp = authProvider.debugOtp;
+      if (debugOtp != null && debugOtp.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Demo OTP: $debugOtp")));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isTamil ? "OTP மீண்டும் அனுப்பப்பட்டது" : "OTP has been resent")));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(authProvider.errorMessage ?? (isTamil ? "OTP அனுப்ப முடியவில்லை" : "Failed to resend OTP"))));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final langProvider = context.watch<LanguageProvider>();
-    final isTamil = langProvider.isTamil;
-    final isExpired = _remainingSeconds == 0;
+    final isTamil = context.watch<LanguageProvider>().isTamil;
+
+    // --- Pinput Styling to match the white rounded boxes ---
+    final defaultPinTheme = PinTheme(
+      width: 50,
+      height: 60,
+      textStyle: const TextStyle(
+        fontSize: 22,
+        color: Colors.black87,
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+    );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA), // Matched light background
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false, // We will build a custom back button
-        title: GestureDetector(
-          onTap: () => Navigator.of(context).pop(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.arrow_back_ios_new_rounded, color: Colors.grey.shade500, size: 18),
-              const SizedBox(width: 4),
-              Text(
-                isTamil ? "பின்செல்க" : "Go Back",
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                
-                // --- TITLES ---
-                Text(
-                  isTamil ? "உங்கள் அலைபேசியைச் சரிபார்க்கவும்" : "Check your phone",
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  isTamil ? "+91 ${widget.mobileNumber} எண்ணிற்கு குறியீட்டை அனுப்பியுள்ளோம்" : "We've sent the code to +91 ${widget.mobileNumber}",
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // --- CUSTOM OTP BOXES ---
-                SizedBox(
-                  height: 60,
-                  child: Stack(
-                    children: [
-                      // Invisible TextField to handle actual keyboard input
-                      Positioned.fill(
-                        child: Opacity(
-                          opacity: 0,
-                          child: TextField(
-                            controller: _otpController,
-                            focusNode: _otpFocusNode,
-                            keyboardType: TextInputType.number,
-                            maxLength: 6,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                            decoration: const InputDecoration(counterText: ""),
-                            showCursor: false,
-                          ),
-                        ),
-                      ),
-                      // Visual Overlay for the boxes
-                      IgnorePointer(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: List.generate(6, (index) => _buildOtpBox(index)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // --- TIMER TEXT ---
-                RichText(
-                  text: TextSpan(
-                    text: isExpired ? (isTamil ? "குறியீடு காலாவதியானது " : "Code expired ") : (isTamil ? "குறியீடு காலாவதியாகும் நேரம்: " : "Code expires in: "),
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              
+              // --- TOP SHIELD ICON WITH SOFT GLOW ---
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFF8F9FA),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1E2A5D).withOpacity(0.08),
+                      blurRadius: 20,
+                      spreadRadius: 10,
                     ),
-                    children: [
-                      TextSpan(
-                        text: isExpired ? (isTamil ? "மீண்டும் அனுப்பவும்" : "Please resend") : _formatTimer(_remainingSeconds),
-                        style: TextStyle(
-                          color: isExpired ? Colors.red.shade600 : Colors.black87,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  ],
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF1E2A5D), // Dark Blue
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.security, // Closest matching icon
+                    color: Color(0xFFFFB732), // Yellow
+                    size: 28,
                   ),
                 ),
-                const SizedBox(height: 30),
-
-                // --- BUTTONS ---
-                // Verify Button (Yellow Pill)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : _verifyOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _yellowTheme,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
+              ),
+              
+              const SizedBox(height: 32),
+              
+              // --- HEADINGS ---
+              Text(
+                isTamil ? "உங்கள் மொபைலைச் சரிபார்க்கவும்" : "Check your phone",
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                isTamil ? "அனுப்பப்பட்ட 6 இலக்க குறியீட்டை உள்ளிடவும்" : "Enter the 6-digit code sent to",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "+91 ${widget.mobileNumber}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // --- 6-DIGIT OTP INPUT ---
+              Pinput(
+                controller: _otpController,
+                length: 6,
+                defaultPinTheme: defaultPinTheme,
+                focusedPinTheme: defaultPinTheme.copyWith(
+                  decoration: defaultPinTheme.decoration!.copyWith(
+                    border: Border.all(color: const Color(0xFF1E2A5D), width: 1.5),
+                  ),
+                ),
+                showCursor: true,
+                onCompleted: (pin) => _verifyOtp(),
+              ),
+              
+              const SizedBox(height: 30),
+              
+              // --- PROGRESS BAR ---
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: _start / _maxTime,
+                  minHeight: 4,
+                  backgroundColor: Colors.grey.shade300,
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1E2A5D)),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // --- TIMER TEXT ---
+              Text(
+                isTamil ? "குறியீடு காலாவதியாகும் நேரம் 00:${_start.toString().padLeft(2, '0')}" : "Codes expire in 00:${_start.toString().padLeft(2, '0')}",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // --- VERIFY BUTTON ---
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFB732), // Yellow
+                    foregroundColor: Colors.black87,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
-                          )
-                        : Text(
-                            isTamil ? "சரிபார்" : "Verify",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                  ),
+                  onPressed: (_otpController.text.length == 6 && !_isVerifying) ? _verifyOtp : null,
+                  child: _isVerifying 
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black87, strokeWidth: 2))
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.check, size: 20, color: Colors.black87),
+                            const SizedBox(width: 8),
+                            Text(
+                              isTamil ? "சரிபார்" : "Verify",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                  ),
+                          ],
+                        ),
                 ),
-                const SizedBox(height: 16),
-                
-                // Send Again Button (Outlined Pill)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: isExpired && !authProvider.isLoading ? _resendOtp : null,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      side: BorderSide(
-                        color: isExpired ? Colors.grey.shade400 : Colors.grey.shade200,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      isTamil ? "மீண்டும் அனுப்பு" : "Send again",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: isExpired ? Colors.black87 : Colors.grey.shade400,
-                      ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // --- RESEND OTP BUTTON ---
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.grey.shade700,
+                    elevation: 0,
+                    shadowColor: Colors.black.withOpacity(0.05),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
                     ),
                   ),
+                  onPressed: _isResendEnabled ? _resendOtp : null,
+                  icon: Icon(
+                    Icons.refresh, 
+                    size: 20, 
+                    color: _isResendEnabled ? Colors.grey.shade700 : Colors.grey.shade400
+                  ),
+                  label: Text(
+                    isTamil ? "மீண்டும் அனுப்பு" : "Resend OTP",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: _isResendEnabled ? Colors.grey.shade700 : Colors.grey.shade400,
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

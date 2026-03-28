@@ -1,5 +1,6 @@
 import "dart:io";
 import "package:flutter/material.dart";
+import "package:flutter/foundation.dart" show kIsWeb;
 import "package:provider/provider.dart";
 import "package:qr_flutter/qr_flutter.dart";
 
@@ -321,6 +322,13 @@ Widget _buildAlignedRow(String label, String value) {
 
     if (localPath != null && localPath.isNotEmpty) {
       try {
+        if (kIsWeb) {
+          return Image.network(
+            localPath,
+            fit: BoxFit.cover,
+            errorBuilder: (c, e, s) => fallback(),
+          );
+        }
         return Image.file(
           File(localPath),
           fit: BoxFit.cover,

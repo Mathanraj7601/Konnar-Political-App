@@ -1,5 +1,6 @@
 import "dart:io";
 import "dart:typed_data";
+import "dart:ui";
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:provider/provider.dart";
@@ -10,6 +11,7 @@ import "../providers/language_provider.dart";
 import "../utils/age_utils.dart";
 import "address_info_screen.dart";
 import "login_screen.dart";
+import '../widgets/custom_stepper.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   final String mobileNumber;
@@ -34,14 +36,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   DateTime? _selectedDob;
   String? _profileImagePath;
-  String? _profileImageBytes; // For web support
+  String? _profileImageBytes; 
 
-  // Theme Colors - Matching Address Info Screen
-  final Color _blueTheme = const Color(0xFF1223B3); // Blue
-  final Color _yellowAccent = const Color(0xFFFFD100); // Yellow
-  final Color _bgOffWhite = const Color(
-    0xFFF6F4EE,
-  ); // Light Beige/Off-white background
+  String? _selectedGender = 'Male';
+  String? _selectedBloodGroup;
+
+  final List<String> _genders = ['Male', 'Female', 'Other'];
+  final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+  // Theme Colors from Image
+  final Color _deepBlue = const Color(0xFF142C8E); 
+  final Color _bgOffWhite = const Color(0xFFF3F5F9); 
+  final Color _iconBg = const Color(0xFFEEF2FF);
 
   @override
   void initState() {
@@ -60,9 +66,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       lastDate: latestAllowedDob,
       builder: (context, child) {
         return Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(colorScheme: ColorScheme.light(primary: _blueTheme)),
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(primary: _deepBlue),
+          ),
           child: child!,
         );
       },
@@ -88,9 +94,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       );
 
       if (selectedImage != null && mounted) {
-        // For web, we need to read the bytes
         final bytes = await selectedImage.readAsBytes();
-
         setState(() {
           _profileImagePath = selectedImage.path;
           _profileImageBytes = String.fromCharCodes(bytes);
@@ -98,9 +102,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(isTamil ? 'படம் தேர்ந்தெடுப்பதில் பிழை: $e' : 'Error picking image: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isTamil ? 'படம் தேர்ந்தெடுப்பதில் பிழை: $e' : 'Error picking image: $e'))
+      );
     }
   }
 
@@ -115,14 +119,6 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       return;
     }
 
-    final age = int.tryParse(_ageController.text) ?? 0;
-    if (age < 18) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isTamil ? "உறுப்பினருக்கு குறைந்தபட்சம் 18 வயது இருக்க வேண்டும்" : "Member must be at least 18 years old")),
-      );
-      return;
-    }
-
     if (_profileImagePath == null || _profileImagePath!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(isTamil ? "சுயவிவர புகைப்படத்தை பதிவேற்றவும்" : "Please upload profile photo")),
@@ -130,17 +126,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       return;
     }
 
+    final age = int.tryParse(_ageController.text) ?? 0;
+
     final draft = RegistrationDraft(
       name: _nameController.text.trim(),
       mobile: widget.mobileNumber,
       dob: _selectedDob!,
       age: age,
       profileImagePath: _profileImagePath,
+      // Pass gender and blood group to your draft model here if needed
     );
 
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => AddressInfoScreen(draft: draft)));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddressInfoScreen(draft: draft)));
   }
 
   @override
@@ -151,6 +148,36 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     super.dispose();
   }
 
+  InputDecoration _inputDeco(IconData? prefixIcon) {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: _deepBlue, width: 1.5),
+      ),
+      prefixIcon: prefixIcon != null ? Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _iconBg,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(prefixIcon, color: _deepBlue, size: 20),
+        ),
+      ) : null,
+    );
+  }
+
   Widget _buildFieldLayout(String label, Widget field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,8 +185,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
             color: Colors.black87,
           ),
         ),
@@ -169,256 +196,202 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     );
   }
 
-  InputDecoration _inputDeco() {
-    return InputDecoration(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: _blueTheme, width: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AuthProvider>();
     final isTamil = context.watch<LanguageProvider>().isTamil;
 
-    if (provider.registrationVerificationToken == null) {
-      return Scaffold(
-        appBar: AppBar(title: Text(isTamil ? "அமர்வு முடிந்தது" : "Session Expired")),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () => Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-              (r) => false,
-            ),
-            child: Text(isTamil ? "உள்நுழையவும்" : "Back to Login"),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: _bgOffWhite,
       appBar: AppBar(
-        title: Text(
-          isTamil ? "படி 1: தனிப்பட்ட விவரங்கள்" : "Step 1: Personal Info",
-          style: TextStyle(fontWeight: FontWeight.bold, color: _blueTheme),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: _blueTheme,
+        backgroundColor: _bgOffWhite,
         elevation: 0,
-        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // --- HEADER ---
                 Text(
-                  isTamil ? "உறுப்பினர் விவரங்கள்" : "Member Details",
-                  style: TextStyle(
+                  isTamil ? "உறுப்பினர் கணக்கை உருவாக்கவும்" : "Create Member Account",
+                  style: const TextStyle(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: _blueTheme,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "உறுப்பினர் பதிவு",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
                   ),
                 ),
                 const SizedBox(height: 24),
 
+                // --- STEPPER ---
+                const CustomStepper(
+                  currentStep: 0, // 0 for 'Personal'
+                  steps: ['Personal', 'Identity', 'Address', 'Confirm'],
+                  // The activeColor is already set to match this screen's theme.
+                ),
+                const SizedBox(height: 32),
+
+                // --- PERSONAL INFORMATION SECTION ---
+                const Text(
+                  "Personal Information",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Photo Upload Section (Matching Image exactly)
-                      Text(
-                        isTamil ? "புகைப்படம் பதிவேற்றவும்" : "Upload Photo",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
+                      // --- PROFILE PHOTO UPLOAD (From Image 2) ---
+                      const Text(
+                        "Profile Photo",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 14,
+                          color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: _blueTheme.withValues(alpha: 0.03),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _blueTheme.withValues(alpha: 0.2),
-                          ),
+                      const SizedBox(height: 12),
+                      
+                      CustomPaint(
+                        painter: DashedRectPainter(
+                          color: Colors.grey.shade300,
+                          strokeWidth: 2,
+                          gap: 6,
                         ),
-                        child: Column(
-                          children: [
-                            if (_profileImageBytes != null &&
-                                _profileImageBytes!.isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.memory(
-                                  Uint8List.fromList(
-                                    _profileImageBytes!.codeUnits,
-                                  ),
-                                  height: 80,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      height: 80,
-                                      width: 80,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(
-                                        Icons.broken_image,
-                                        color: Colors.red,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            else if (_profileImagePath != null &&
-                                _profileImagePath!.isNotEmpty)
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  File(_profileImagePath!),
-                                  height: 80,
-                                  width: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      height: 80,
-                                      width: 80,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(
-                                        Icons.broken_image,
-                                        color: Colors.red,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            else
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: _yellowAccent,
-                                    width: 3,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.camera_alt,
-                                  size: 40,
-                                  color: _blueTheme,
-                                ),
-                              ),
-
-                            const SizedBox(height: 16),
-                            Row(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          child: Center(
+                            child: Stack(
                               children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () =>
-                                        _pickProfileImage(ImageSource.camera),
-                                    icon: const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    label: Text(
-                                      isTamil ? "புகைப்படம் எடு" : "Take Photo",
-                                      style: const TextStyle(color: Colors.white),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: _blueTheme,
-                                      foregroundColor: _yellowAccent,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
+                                // Image Box
+                                Container(
+                                  width: 90,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(20), // Rounded square
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: _profileImagePath != null
+                                        ? Image.file(
+                                            File(_profileImagePath!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Icon(Icons.person, size: 45, color: Colors.grey.shade400),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () =>
-                                        _pickProfileImage(ImageSource.gallery),
-                                    icon: const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.black87,
-                                      size: 18,
+                                // Edit Badge
+                                Positioned(
+                                  bottom: -5,
+                                  right: -5,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 5,
+                                        ),
+                                      ],
                                     ),
-                                    label: Text(
-                                      isTamil ? "கேலரி" : "Gallery",
-                                      style: const TextStyle(color: Colors.black87),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                      side: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
+                                    child: const Icon(
+                                      Icons.edit,
+                                      size: 16,
+                                      color: Color(0xFF142C8E),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Rest of Personal Info
-                      _buildFieldLayout(
-                        isTamil ? "அலைபேசி எண்" : "Mobile Number",
-                        TextFormField(
-                          initialValue: widget.mobileNumber,
-                          readOnly: true,
-                          decoration: _inputDeco(),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
+                      
+                      // Action Buttons (Take Photo / Gallery)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _pickProfileImage(ImageSource.camera),
+                              icon: const Icon(Icons.camera_alt, color: Color(0xFF142C8E), size: 18),
+                              label: Text(
+                                isTamil ? "புகைப்படம் எடு" : "Take Photo",
+                                style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: BorderSide(color: Colors.grey.shade200),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _pickProfileImage(ImageSource.gallery),
+                              icon: const Icon(Icons.image, color: Color(0xFF142C8E), size: 18),
+                              label: Text(
+                                isTamil ? "கேலரி" : "Gallery",
+                                style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: BorderSide(color: Colors.grey.shade200),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Divider(color: Colors.grey.shade100, thickness: 1.5),
+                      const SizedBox(height: 20),
 
+                      // --- FORM FIELDS ---
                       _buildFieldLayout(
                         isTamil ? "முழு பெயர்" : "Full Name",
                         TextFormField(
                           controller: _nameController,
-                          decoration: _inputDeco(),
-                          validator: (val) => (val?.trim() ?? "").length < 3
-                              ? (isTamil ? "தேவை" : "Required")
-                              : null,
+                          decoration: _inputDeco(Icons.person),
+                          validator: (val) => (val?.trim() ?? "").length < 3 ? "Required" : null,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -433,15 +406,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                 controller: _dobController,
                                 readOnly: true,
                                 onTap: _pickDob,
-                                decoration: _inputDeco().copyWith(
-                                  suffixIcon: Icon(
-                                    Icons.calendar_today,
-                                    color: _blueTheme,
-                                    size: 20,
-                                  ),
+                                decoration: _inputDeco(Icons.calendar_month).copyWith(
+                                  hintText: "15 Mar 2001",
+                                  hintStyle: TextStyle(color: Colors.grey.shade400)
                                 ),
-                                validator: (val) =>
-                                    (val ?? "").isEmpty ? (isTamil ? "தேவை" : "Required") : null,
+                                validator: (val) => (val ?? "").isEmpty ? "Required" : null,
                               ),
                             ),
                           ),
@@ -453,7 +422,53 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               TextFormField(
                                 controller: _ageController,
                                 readOnly: true,
-                                decoration: _inputDeco(),
+                                textAlign: TextAlign.center,
+                                decoration: _inputDeco(null).copyWith(
+                                  hintText: "25",
+                                  hintStyle: TextStyle(color: Colors.grey.shade400)
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildFieldLayout(
+                              isTamil ? "பாலினம்" : "Gender",
+                              DropdownButtonFormField<String>(
+                                value: _selectedGender,
+                                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                                decoration: _inputDeco(Icons.male),
+                                items: _genders.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value, style: const TextStyle(fontSize: 14)),
+                                  );
+                                }).toList(),
+                                onChanged: (val) => setState(() => _selectedGender = val),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildFieldLayout(
+                              isTamil ? "இரத்த வகை" : "Blood Group",
+                              DropdownButtonFormField<String>(
+                                value: _selectedBloodGroup,
+                                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                                decoration: _inputDeco(null).copyWith(hintText: "O+"),
+                                items: _bloodGroups.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value, style: const TextStyle(fontSize: 14)),
+                                  );
+                                }).toList(),
+                                onChanged: (val) => setState(() => _selectedBloodGroup = val),
+                                validator: (val) => val == null ? "Required" : null,
                               ),
                             ),
                           ),
@@ -462,38 +477,47 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 30),
 
-                const SizedBox(height: 24),
-                SizedBox(
+                // --- BOTTOM CONTINUE BUTTON ---
+                Container(
                   width: double.infinity,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD34E), Color(0xFFFFB020)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
                   child: ElevatedButton(
-                    onPressed: _next,
+                    onPressed: provider.isLoading ? null : _next,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _blueTheme,
-                      foregroundColor: _yellowAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
                     child: provider.isLoading
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: _yellowAccent,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            isTamil ? "முகவரிக்குத் தொடரவும்" : "Continue to Address",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.black87, strokeWidth: 2))
+                        : const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.arrow_forward, color: Colors.black87, size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                "Continue",
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
                           ),
                   ),
                 ),
+                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -501,4 +525,45 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       ),
     );
   }
+}
+
+// --- CUSTOM PAINTER FOR DASHED BORDER AROUND PHOTO ---
+class DashedRectPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+
+  DashedRectPainter({required this.color, this.strokeWidth = 1.0, this.gap = 5.0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    var paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    var path = Path();
+    var rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height), 
+      const Radius.circular(16)
+    );
+    path.addRRect(rrect);
+
+    var metrics = path.computeMetrics();
+    var dashedPath = Path();
+    for (var metric in metrics) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        dashedPath.addPath(
+          metric.extractPath(distance, distance + gap),
+          Offset.zero,
+        );
+        distance += gap * 2;
+      }
+    }
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

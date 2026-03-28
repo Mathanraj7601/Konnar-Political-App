@@ -1,14 +1,11 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../config/app_config.dart";
 import "../providers/language_provider.dart";
 import "../theme/app_theme.dart";
-import "../widgets/alternating_word_text.dart";
 import "../widgets/primary_button.dart";
-import "home_screen.dart";
+import "member_card_screen.dart";
 
 class RegistrationSuccessScreen extends StatefulWidget {
   final String memberId;
@@ -20,27 +17,11 @@ class RegistrationSuccessScreen extends StatefulWidget {
 }
 
 class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
-  Timer? _redirectTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _redirectTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) _openMemberCard();
-    });
-  }
-
   void _openMemberCard() {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(builder: (_) => const MemberCardScreen()),
       (route) => false,
     );
-  }
-
-  @override
-  void dispose() {
-    _redirectTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -48,7 +29,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
     final isTamil = context.watch<LanguageProvider>().isTamil;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -65,7 +46,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                       height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.green.withValues(alpha: 0.1),
+                        color: Colors.green.withOpacity(0.1),
                       ),
                     ),
                     Container(
@@ -88,11 +69,9 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                 ),
                 const SizedBox(height: 32),
                 
-                AlternatingWordText(
-                  text: isTamil ? "பதிவு வெற்றிகரமானது!" : "Registration Successful!",
-                  firstColor: AppTheme.primary,
-                  secondColor: Colors.black87,
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                Text(
+                  isTamil ? "பதிவு வெற்றிகரமானது!" : "Registration Successful!",
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -101,7 +80,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                   isTamil ? "${AppConfig.partyName} குடும்பத்திற்கு உங்களை வரவேற்கிறோம்." : "Welcome to the ${AppConfig.partyName} family.",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.shade600,
+                    color: AppTheme.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -109,17 +88,24 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                 if (widget.memberId.isNotEmpty) ...[
                   const SizedBox(height: 24),
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                      color: AppTheme.card,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
                         Text(
                           isTamil ? "உங்கள் உறுப்பினர் எண்" : "Your Member ID",
-                          style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -127,7 +113,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                           style: const TextStyle(
                             fontSize: 22,
                             color: AppTheme.primary,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -139,7 +125,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                 const SizedBox(height: 24),
                 Text(
                   isTamil ? "உங்கள் பதிவு செய்யப்பட்ட அலைபேசி எண்ணிற்கு SMS உறுதிப்படுத்தல் அனுப்பப்பட்டுள்ளது." : "An SMS confirmation has been sent to your registered mobile number.",
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
                   textAlign: TextAlign.center,
                 ),
                 
@@ -148,6 +134,24 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                   label: isTamil ? "உறுப்பினர் அட்டையைக் காண்க" : "View Member Card",
                   icon: Icons.credit_card_rounded,
                   onPressed: _openMemberCard,
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(isTamil ? "பகிர்தல் திரை திறக்கிறது..." : "Opening share menu...")),
+                    );
+                  },
+                  icon: const Icon(Icons.share_outlined),
+                  label: Text(isTamil ? "பகிரவும்" : "Share"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    side: const BorderSide(color: AppTheme.primary, width: 1.5),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               ],
             ),
