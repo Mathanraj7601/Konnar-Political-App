@@ -1,17 +1,48 @@
 import 'package:flutter/material.dart';
 
-class HomeDashboardModule extends StatelessWidget {
-  const HomeDashboardModule({super.key});
+class HomeDashboardModule extends StatefulWidget {
+  final String profileName;
+  final String profileDistrict;
+  final Function(int)? onNavigate;
+  final Function()? onBack;
 
-  static const _profileName = 'Arjun Kumar';
-  static const _profileDistrict = 'Chennai District';
-  static const _memberId = 'TRN4234466';
+  const HomeDashboardModule({
+    super.key,
+    required this.profileName,
+    required this.profileDistrict,
+    this.onNavigate,
+    this.onBack,
+  });
 
-  static const _actions = [
-    _ActionItem(label: 'View Card', icon: Icons.credit_card, color: Color(0xFF1E2A78)),
-    _ActionItem(label: 'Members', icon: Icons.groups, color: Color(0xFF1E2A78)),
-    _ActionItem(label: 'Updates', icon: Icons.arrow_forward_ios, color: Color(0xFFF6A800)),
-    _ActionItem(label: 'Events', icon: Icons.diamond, color: Color(0xFFCB2C2C)),
+  @override
+  State<HomeDashboardModule> createState() => _HomeDashboardModuleState();
+}
+
+class _HomeDashboardModuleState extends State<HomeDashboardModule> {
+  bool isExpanded = false;
+
+  static final List<_ActionItem> _actions = [
+    _ActionItem(
+      label: 'View Card',
+      icon: Icons.credit_card,
+      color: Color(0xFF1E2A78),
+    ),
+    _ActionItem(
+      label: 'Announcement',
+      icon: Icons.campaign,
+      color: Color(0xFF1E2A78),
+    ),
+    _ActionItem(
+      label: 'Updates & Events',
+      icon: Icons.update,
+      color: Color(0xFFF6A800),
+    ),
+    _ActionItem(
+      label: 'Members',
+      icon: Icons.groups,
+      color: Color(0xFFCB2C2C),
+      extra: '5000',
+    ),
   ];
 
   @override
@@ -28,21 +59,19 @@ class HomeDashboardModule extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    height: 220,
+                    height: 250,
                     width: double.infinity,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [Color(0xFF1E2A78), Color(0xFF2F3FA0)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                     ),
-                    padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 65, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'Vanakkam, Arjun 👋',
+                          'Vanakkam, Arjun Kumar 👋',
                           style: TextStyle(
                             fontSize: 24,
                             color: Colors.white,
@@ -51,7 +80,7 @@ class HomeDashboardModule extends StatelessWidget {
                         ),
                         SizedBox(height: 6),
                         Text(
-                          'Member ID: TRN4234466',
+                          'Member ID: A26#MDU0001',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -61,31 +90,31 @@ class HomeDashboardModule extends StatelessWidget {
                     ),
                   ),
 
-                  // 🧑 PROFILE CARD (FIXED POSITION)
+                  // ✅ FINAL PERFECT POSITION
                   Positioned(
-                    bottom: -100, // 🔥 moved down
+                    bottom: -120,
                     left: 16,
                     right: 16,
-                    child: _buildProfileCard(),
+                    child: _buildProfileCard(
+                      widget.profileName,
+                      widget.profileDistrict,
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 120), // 🔥 adjusted spacing
+              const SizedBox(height: 140),
 
-              // ⚪ CONTENT
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    _buildActionGrid(context),
+                    _buildActionGrid(),
                     const SizedBox(height: 24),
                     _buildAnnouncementsSection(),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -94,7 +123,7 @@ class HomeDashboardModule extends StatelessWidget {
   }
 
   // 🧑 PROFILE CARD
-  static Widget _buildProfileCard() {
+  Widget _buildProfileCard(String name, String district) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
@@ -136,26 +165,26 @@ class HomeDashboardModule extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            _profileName,
-            style: TextStyle(
+          Text(
+            name,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1E2A78),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            _profileDistrict,
-            style: TextStyle(color: Colors.grey, fontSize: 14),
+          Text(
+            district,
+            style: const TextStyle(color: Colors.grey),
           ),
         ],
       ),
     );
   }
 
-  // 🔲 ACTION GRID
-  Widget _buildActionGrid(BuildContext context) {
+  // 🔲 GRID
+  Widget _buildActionGrid() {
     return GridView.builder(
       itemCount: _actions.length,
       shrinkWrap: true,
@@ -164,19 +193,16 @@ class HomeDashboardModule extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: 14,
         crossAxisSpacing: 14,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.25,
       ),
       itemBuilder: (context, index) {
         final action = _actions[index];
 
-        return GestureDetector(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${action.label} tapped')),
-            );
-          },
+        return InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => _handleNavigation(context, index),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 18),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(14),
@@ -184,7 +210,6 @@ class HomeDashboardModule extends StatelessWidget {
                 BoxShadow(
                   color: Colors.black.withOpacity(0.04),
                   blurRadius: 8,
-                  offset: const Offset(0, 3),
                 ),
               ],
             ),
@@ -198,19 +223,30 @@ class HomeDashboardModule extends StatelessWidget {
                     color: action.color,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    action.icon,
-                    size: 22,
-                    color: Colors.white,
-                  ),
+                  child: Icon(action.icon, color: Colors.white, size: 22),
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  action.label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
+                Column(
+                  children: [
+                    Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (action.extra != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        action.extra!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -220,7 +256,32 @@ class HomeDashboardModule extends StatelessWidget {
     );
   }
 
-  // 📢 ANNOUNCEMENTS
+  void _handleNavigation(BuildContext context, int index) {
+    // Use callback if provided, otherwise use default navigation
+    if (widget.onNavigate != null) {
+      widget.onNavigate!(index);
+      return;
+    }
+
+    // Default navigation for pages that need Navigator.push
+    switch (index) {
+      case 3:
+        // Members - Navigate to Members page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MembersPage()),
+        );
+        break;
+      default:
+        // View Card - Navigate to View Card page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ViewCardPage()),
+        );
+    }
+  }
+
+  // ANNOUNCEMENTS
   Widget _buildAnnouncementsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,36 +296,36 @@ class HomeDashboardModule extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Meeting Reminder',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Community meeting this Sunday at 5 PM. Don\'t miss it!',
-                style: TextStyle(color: Colors.grey),
+              Text(
+                isExpanded
+                    ? 'Community meeting this Sunday at 5 PM. Please make sure to attend.'
+                    : 'Community meeting this Sunday at 5 PM...',
+                style: const TextStyle(color: Colors.grey),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'Read More >',
-                    style: TextStyle(color: Color(0xFF1E2A78)),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isExpanded = !isExpanded;
+                    });
+                  },
+                  child: Text(
+                    isExpanded ? 'Show Less' : 'Read More >',
+                    style: const TextStyle(
+                      color: Color(0xFF1E2A78),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -280,10 +341,31 @@ class _ActionItem {
   final String label;
   final IconData icon;
   final Color color;
+  final String? extra;
 
   const _ActionItem({
     required this.label,
     required this.icon,
     required this.color,
+    this.extra,
   });
+}
+
+// PAGES
+class ViewCardPage extends StatelessWidget {
+  const ViewCardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text("View Card Page")));
+  }
+}
+
+class MembersPage extends StatelessWidget {
+  const MembersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: Text("Members Page")));
+  }
 }

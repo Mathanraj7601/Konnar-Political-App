@@ -1,24 +1,46 @@
 import 'package:flutter/material.dart';
 import '../widgets/home_dashboard_module.dart';
 import 'announcements_page.dart';
-import 'updates_page.dart';
+import 'updates_page.dart' as screens;
 import 'profile_page.dart';
+import '../services/navigation_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Register this screen with navigation service
+    NavigationService().homeScreenState = this;
+  }
+
+  // Method to change tab index from outside
+  void changeTabIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  // Method to go back to previous tab
+  void goBackToPreviousTab() {
+    if (_currentIndex != 0) {
+      changeTabIndex(0);
+    }
+  }
 
   // The different tabs for the home screen
   final List<Widget> _tabs = [
     const _HomeDashboardTab(),
     const AnnouncementsPage(),
-    const UpdatesPage(),
+    const screens.UpdatesPage(),
     const ProfilePage(),
   ];
 
@@ -74,7 +96,14 @@ class _HomeDashboardTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const HomeDashboardModule();
+    return HomeDashboardModule(
+      profileName: 'Arjun Kumar',
+      profileDistrict: 'Chennai District',
+      onNavigate: (index) {
+        final homeScreenState = context.findAncestorStateOfType<HomeScreenState>();
+        homeScreenState?.changeTabIndex(index);
+      },
+    );
   }
 }
 

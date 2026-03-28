@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'edit_profile_page.dart';
 import 'my_details_page.dart';
+import '../services/navigation_service.dart';
+import 'login_screen.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -14,9 +17,29 @@ class ProfilePage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+        leading: Builder(
+          builder: (context) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            final isSmallScreen = screenWidth < 360;
+            final isTablet = screenWidth >= 768;
+            
+            return IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.black87,
+                size: isTablet ? 26 : (isSmallScreen ? 20 : 24),
+              ),
+              onPressed: () {
+                // Use navigation service to go back to home tab
+                NavigationService().goBackToHome();
+              },
+              padding: EdgeInsets.all(isTablet ? 16 : 12),
+              constraints: BoxConstraints(
+                minWidth: isTablet ? 56 : 48,
+                minHeight: isTablet ? 56 : 48,
+              ),
+            );
+          },
         ),
         title: const Text(
           "Profile",
@@ -26,6 +49,7 @@ class ProfilePage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
+        titleSpacing: 0,
       ),
 
       body: Padding(
@@ -34,7 +58,7 @@ class ProfilePage extends StatelessWidget {
           children: [
             const SizedBox(height: 10),
 
-            // 👤 PROFILE IMAGE
+            // � PROFILE IMAGE
             Stack(
               alignment: Alignment.bottomRight,
               children: [
@@ -45,7 +69,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 ),
 
-                // 🟢 EDIT ICON
+                // � STAR ICON
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: const BoxDecoration(
@@ -53,7 +77,7 @@ class ProfilePage extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.edit,
+                    Icons.star,
                     size: 14,
                     color: Colors.white,
                   ),
@@ -88,6 +112,7 @@ class ProfilePage extends StatelessWidget {
               title: "Edit Profile",
               showArrow: false,
               onTap: () {
+                print("Edit Profile button clicked!");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const EditProfilePage()),
@@ -118,6 +143,9 @@ class ProfilePage extends StatelessWidget {
               title: "Logout",
               iconColor: Colors.red,
               showArrow: true,
+              onTap: () {
+                _showLogoutDialog(context);
+              },
             ),
           ],
         ),
@@ -125,7 +153,36 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  // 🔹 MENU ITEM
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Logout"),
+          content: const Text("Are you sure you want to logout?"),
+          actions: [
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Logout"),
+              onPressed: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // � MENU ITEM
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -133,11 +190,12 @@ class ProfilePage extends StatelessWidget {
     Color iconColor = const Color(0xFF1E2A78),
     VoidCallback? onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),

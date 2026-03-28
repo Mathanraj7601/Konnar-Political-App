@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
+import '../services/navigation_service.dart';
 
-class AnnouncementsPage extends StatelessWidget {
+class AnnouncementsPage extends StatefulWidget {
   const AnnouncementsPage({super.key});
+
+  @override
+  State<AnnouncementsPage> createState() => _AnnouncementsPageState();
+}
+
+class _AnnouncementsPageState extends State<AnnouncementsPage> {
+  // Track expanded state for each announcement
+  final List<bool> _expandedStates = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize all announcements as not expanded
+    _expandedStates.addAll(List.filled(_announcements.length, false));
+  }
 
   static const List<Map<String, dynamic>> _announcements = [
     {
@@ -24,6 +40,39 @@ class AnnouncementsPage extends StatelessWidget {
       'title': 'System Maintenance',
       'description': 'Scheduled maintenance this weekend. Services may be temporarily unavailable.',
     },
+
+    // 🔥 NEW MOCK DATA BELOW
+
+    {
+      'date': 'APR 05, 2024',
+      'title': 'Health Camp',
+      'description': 'Free medical checkup camp organized at community hall from 9 AM to 2 PM.',
+    },
+    {
+      'date': 'APR 01, 2024',
+      'title': 'Membership Drive',
+      'description': 'New membership registration drive has started. Invite your friends and family to join.',
+    },
+    {
+      'date': 'MAR 28, 2024',
+      'title': 'Volunteer Meeting',
+      'description': 'All volunteers are requested to attend the meeting regarding upcoming events.',
+    },
+    {
+      'date': 'MAR 25, 2024',
+      'title': 'Training Session',
+      'description': 'Leadership training session will be conducted this Saturday at 4 PM.',
+    },
+    {
+      'date': 'MAR 20, 2024',
+      'title': 'Community Cleanup',
+      'description': 'Join us in cleaning the local park this Sunday morning. Let\'s keep our area clean.',
+    },
+    {
+      'date': 'MAR 15, 2024',
+      'title': 'Festival Celebration',
+      'description': 'Celebrate the upcoming festival with us. Food, music, and fun activities included!',
+    },
   ];
 
   @override
@@ -35,9 +84,29 @@ class AnnouncementsPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
+        leading: Builder(
+          builder: (context) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            final isSmallScreen = screenWidth < 360;
+            final isTablet = screenWidth >= 768;
+            
+            return IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.black87,
+                size: isTablet ? 26 : (isSmallScreen ? 20 : 24),
+              ),
+              onPressed: () {
+                // Use navigation service to go back to home tab
+                NavigationService().goBackToHome();
+              },
+              padding: EdgeInsets.all(isTablet ? 16 : 12),
+              constraints: BoxConstraints(
+                minWidth: isTablet ? 56 : 48,
+                minHeight: isTablet ? 56 : 48,
+              ),
+            );
+          },
         ),
         title: const Text(
           'Announcements',
@@ -47,7 +116,8 @@ class AnnouncementsPage extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        centerTitle: false,
+        centerTitle: true,
+        titleSpacing: 0,
       ),
 
       // 🔹 BODY
@@ -107,7 +177,9 @@ class AnnouncementsPage extends StatelessWidget {
 
                       // DESCRIPTION
                       Text(
-                        item['description'],
+                        _expandedStates[index]
+                            ? item['description']
+                            : '${item['description'].substring(0, item['description'].length > 50 ? 50 : item['description'].length)}${item['description'].length > 50 ? '...' : ''}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -117,13 +189,23 @@ class AnnouncementsPage extends StatelessWidget {
 
                       const SizedBox(height: 10),
 
-                      // READ MORE
-                      const Text(
-                        "Read More >",
-                        style: TextStyle(
-                          color: Color(0xFF1E2A78),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      // READ MORE / SHOW LESS
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _expandedStates[index] = !_expandedStates[index];
+                            });
+                          },
+                          child: Text(
+                            _expandedStates[index] ? 'Show Less' : 'Read More >',
+                            style: const TextStyle(
+                              color: Color(0xFF1E2A78),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ),
                     ],
