@@ -503,9 +503,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             child: _buildFieldLayout(
                               isTamil ? "பாலினம்" : "Gender",
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: _selectedGender,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(Icons.person_outline).copyWith(hintText: isTamil ? "பாலினத்தைத் தேர்ந்தெடுக்கவும்" : "Select Gender"),
+                                decoration: _inputDeco(Icons.person_outline).copyWith(hintText: isTamil ? "தேர்ந்தெடு" : "Select"),
                                 items: _genders.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
@@ -522,9 +523,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                             child: _buildFieldLayout(
                               isTamil ? "இரத்த வகை" : "Blood Group",
                               DropdownButtonFormField<String>(
+                                isExpanded: true,
                                 value: _selectedBloodGroup,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                decoration: _inputDeco(null).copyWith(hintText: isTamil ? "குழுவைத் தேர்ந்தெடுக்கவும்" : "Select Group"),
+                                decoration: _inputDeco(null).copyWith(hintText: isTamil ? "தேர்ந்தெடு" : "Select"),
                                 items: _bloodGroups.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,

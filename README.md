@@ -52,34 +52,34 @@ Full-stack implementation with:
 ```text
 .
 +-- backend/
-¦   +-- .env.example
-¦   +-- API_DOCUMENTATION.md
-¦   +-- migrations/
-¦   ¦   +-- 001_create_tables.sql
-¦   ¦   +-- 002_seed_dummy_data.sql
-¦   +-- scripts/
-¦   ¦   +-- migrate.js
-¦   ¦   +-- seed.js
-¦   +-- src/
-¦   ¦   +-- app.js
-¦   ¦   +-- server.js
-¦   ¦   +-- config/
-¦   ¦   +-- controllers/
-¦   ¦   +-- middleware/
-¦   ¦   +-- routes/
-¦   ¦   +-- services/
-¦   ¦   +-- utils/
-¦   +-- package.json
+ï¿½   +-- .env.example
+ï¿½   +-- API_DOCUMENTATION.md
+ï¿½   +-- migrations/
+ï¿½   ï¿½   +-- 001_create_tables.sql
+ï¿½   ï¿½   +-- 002_seed_dummy_data.sql
+ï¿½   +-- scripts/
+ï¿½   ï¿½   +-- migrate.js
+ï¿½   ï¿½   +-- seed.js
+ï¿½   +-- src/
+ï¿½   ï¿½   +-- app.js
+ï¿½   ï¿½   +-- server.js
+ï¿½   ï¿½   +-- config/
+ï¿½   ï¿½   +-- controllers/
+ï¿½   ï¿½   +-- middleware/
+ï¿½   ï¿½   +-- routes/
+ï¿½   ï¿½   +-- services/
+ï¿½   ï¿½   +-- utils/
+ï¿½   +-- package.json
 +-- lib/
-¦   +-- config/
-¦   +-- models/
-¦   +-- providers/
-¦   +-- screens/
-¦   +-- services/
-¦   +-- theme/
-¦   +-- utils/
-¦   +-- widgets/
-¦   +-- main.dart
+ï¿½   +-- config/
+ï¿½   +-- models/
+ï¿½   +-- providers/
+ï¿½   +-- screens/
+ï¿½   +-- services/
+ï¿½   +-- theme/
+ï¿½   +-- utils/
+ï¿½   +-- widgets/
+ï¿½   +-- main.dart
 +-- pubspec.yaml
 ```
 
@@ -173,7 +173,7 @@ flutter run --dart-define=API_BASE_URL=http://<YOUR_LOCAL_IP>:4000
 Seed migration inserts one existing user:
 
 - Mobile: `9876543210`
-- Member ID: `KPP-2026-001000`
+- Member ID: `A26#MDU0001`
 - Name: `Arun Kumar`
 
 For OTP in development/mock mode, API returns `debugOtp` in `/auth/send-otp` response.
