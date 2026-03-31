@@ -37,7 +37,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   DateTime? _selectedDob;
   String? _profileImagePath;
-  String? _profileImageBytes; 
+  Uint8List? _profileImageBytes;
 
   String? _selectedGender;
   String? _selectedBloodGroup;
@@ -99,7 +99,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         final bytes = await selectedImage.readAsBytes();
         setState(() {
           _profileImagePath = selectedImage.path;
-          _profileImageBytes = String.fromCharCodes(bytes);
+          _profileImageBytes = bytes;
         });
       }
     } catch (e) {
@@ -136,9 +136,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       dob: _selectedDob!,
       age: age,
       profileImagePath: _profileImagePath,
+      profileImageBytes: _profileImageBytes,
       gender: _selectedGender,
       bloodGroup: _selectedBloodGroup,
-      // Pass gender and blood group to your draft model here if needed
     );
 
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => AddressInfoScreen(draft: draft)));
@@ -220,7 +220,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -239,7 +239,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 4),
 
                 // --- HEADER ---
                 Center(
@@ -267,15 +267,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 // --- STEPPER ---
                 CustomStepper(
                   currentStep: currentStep,
                   steps: steps,
-                  // The activeColor is already set to match this screen's theme.
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
 
                 // --- PERSONAL INFORMATION SECTION ---
                 const Center(
@@ -339,9 +338,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                                   ),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(20),
-                                    child: _profileImagePath != null
-                                        ? Image.file(
-                                            File(_profileImagePath!),
+                                    child: _profileImageBytes != null
+                                        ? Image.memory(
+                                            _profileImageBytes!,
                                             fit: BoxFit.cover,
                                           )
                                         : Icon(Icons.person, size: 45, color: Colors.grey.shade400),

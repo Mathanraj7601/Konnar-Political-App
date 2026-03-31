@@ -29,6 +29,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
   final _doorNoController = TextEditingController();
   final _pincodeController = TextEditingController();
   final _villageController = TextEditingController();
+  final _unionController = TextEditingController();
 
   bool _isLocating = false;
 
@@ -40,6 +41,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
     _doorNoController.text = _draft.doorNumber ?? '';
     _pincodeController.text = _draft.pincode ?? '';
     _villageController.text = _draft.village ?? '';
+    _unionController.text = _draft.union ?? '';
   }
 
   @override
@@ -48,6 +50,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
     _doorNoController.dispose();
     _pincodeController.dispose();
     _villageController.dispose();
+    _unionController.dispose();
     super.dispose();
   }
 
@@ -60,6 +63,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
     _draft.doorNumber = _doorNoController.text.trim();
     _draft.pincode = _pincodeController.text.trim();
     _draft.village = _villageController.text.trim();
+    _draft.union = _unionController.text.trim();
 
     // Route to Confirmation Step
     Navigator.of(context).push(
@@ -173,7 +177,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -189,11 +193,11 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(isTamil ? "குடியிருப்பு முகவரி" : "Residential Address", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 4),
             Text(isTamil ? "உங்கள் இருப்பிடத்தை நாங்கள் கண்டறிவோம்..." : "We'll auto-detect your location for accu...", style: const TextStyle(fontSize: 14, color: Colors.grey), textAlign: TextAlign.center),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             CustomStepper(
               currentStep: currentStep,
               steps: steps,
@@ -204,7 +208,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                 }
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
               child: Form(
@@ -218,10 +222,21 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                       Container(
                         height: 160,
                         width: double.infinity,
+                        clipBehavior: Clip.antiAlias, // Ensures the image respects the border radius
                         decoration: BoxDecoration(
                           // Using the light grey theme from your image
                           color: const Color(0xFFF6F7F9), 
                           borderRadius: BorderRadius.circular(16),
+                          image: DecorationImage(
+                            // Using a generic blurred map as a placeholder
+                            image: const AssetImage('assets/map_bg.png'), // Using a local asset to avoid web CORS issues
+                            fit: BoxFit.cover,
+                            // Add a slight dark overlay to make foreground elements more readable
+                            colorFilter: ColorFilter.mode(
+                              Colors.black.withOpacity(0.25),
+                              BlendMode.darken,
+                            ),
+                          ),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -301,6 +316,14 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                           hintText: isTamil ? "கிராமம் அல்லது நகரத்தை உள்ளிடவும்" : "Enter village or city",
                           prefixIcon: Icons.location_city, 
                           validator: (v) => (v?.isEmpty ?? true) ? "Required" : null),
+                      const SizedBox(height: 20),
+                      FormInputField(
+                          controller: _unionController,
+                          label: isTamil ? "ஒன்றியம் (விருப்பத்தேர்வு)" : "Union (Optional)",
+                          hintText: isTamil ? "ஒன்றியத்தை உள்ளிடவும்" : "Enter union",
+                          prefixIcon: Icons.groups_2_outlined,
+                          validator: null
+                      ),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
                         value: TamilNaduElectoralData.districts.contains(_draft.district)

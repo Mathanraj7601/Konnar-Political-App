@@ -101,7 +101,7 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
         child: Column(
           children: [
             // --- STEP X OF Y TITLE ---
@@ -117,7 +117,7 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             
             Text(
               isTamil ? "விவரங்களை உறுதிப்படுத்தவும்" : "Confirm Details",
@@ -128,7 +128,7 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
               isTamil ? "உங்கள் தகவலைச் சரிபார்க்கவும்" : "Review your information",
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             
             // --- STEPPER ---
             CustomStepper(
@@ -143,7 +143,7 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
                 }
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // 🔥 PROFILE CARD
             Container(
@@ -205,6 +205,8 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
               _row(Icons.home, isTamil ? "கதவு எண்" : "Door No", draft.doorNumber ?? "-"),
               _divider(),
               _row(Icons.location_city, isTamil ? "கிராமம்/நகரம்" : "City / Village", draft.village ?? "-"),
+              _divider(),
+              _row(Icons.groups_2_outlined, isTamil ? "ஒன்றியம்" : "Union", (draft.union?.isNotEmpty ?? false) ? draft.union! : "-"),
               _divider(),
               _row(Icons.map, isTamil ? "மாவட்டம்" : "District", draft.district ?? "-"),
               _divider(),

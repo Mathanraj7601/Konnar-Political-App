@@ -243,7 +243,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -262,7 +262,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 // --- HEADER ---
                 Center(
@@ -290,14 +290,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // --- STEPPER ---
                 CustomStepper(
                   currentStep: currentStep,
                   steps: steps,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 Container(
                   padding: const EdgeInsets.all(24),

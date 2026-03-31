@@ -14,10 +14,13 @@ class RegistrationDraft {
   String? voterId;
   String? aadhaarNumber;
   String? idProofPath;
+  Uint8List? idProofBytes;
+  String? idProofName;
 
   String? street;
   String? doorNumber;
   String? village;
+  String? union;
   String? pincode;
   String? district;
   String? constituency;
@@ -36,9 +39,12 @@ class RegistrationDraft {
     this.voterId,
     this.aadhaarNumber,
     this.idProofPath,
+    this.idProofBytes,
+    this.idProofName,
     this.street,
     this.doorNumber,
     this.village,
+    this.union,
     this.pincode,
     this.district,
     this.constituency,

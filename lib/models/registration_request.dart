@@ -12,6 +12,7 @@ class RegistrationRequest {
   final String street;
   final String doorNumber;
   final String village;
+  final String? union;
   final String taluk;
   final String district;
   final String state;
@@ -30,6 +31,7 @@ class RegistrationRequest {
     required this.street,
     required this.doorNumber,
     required this.village,
+    this.union,
     required this.taluk,
     required this.district,
     required this.state,
@@ -50,6 +52,7 @@ class RegistrationRequest {
       "street": street,
       "door_number": doorNumber,
       "village": village,
+      if (union != null && union!.isNotEmpty) "union": union,
       "taluk": taluk,
       "district": district,
       "state": state,

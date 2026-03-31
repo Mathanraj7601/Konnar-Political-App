@@ -90,6 +90,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             street: widget.draft!.street!,
             doorNumber: widget.draft!.doorNumber!,
             village: widget.draft!.village!,
+            union: widget.draft!.union,
             taluk: widget.draft!.constituency!,
             district: widget.draft!.district!,
             state: widget.draft!.state ?? 'Tamil Nadu',

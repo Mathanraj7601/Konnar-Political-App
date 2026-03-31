@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
@@ -47,17 +48,33 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+      withData: true, // Ensures bytes are loaded, crucial for web support
     );
 
-    if (result != null && result.files.single.path != null) {
+    if (result != null && result.files.single != null) {
+      final file = result.files.single;
       setState(() {
-        _draft.idProofPath = result.files.single.path;
+        if (!kIsWeb) {
+          _draft.idProofPath = file.path; // Path is only available on mobile
+        }
+        _draft.idProofBytes = file.bytes; // Bytes for web/other platforms
+        _draft.idProofName = file.name; // Name for display
       });
     }
   }
 
   void _next() {
+    final isTamil = context.read<LanguageProvider>().isTamil;
     if (_formKey.currentState!.validate()) {
+      // Check if a file has been picked (either path or bytes should exist)
+      if ((_draft.idProofPath == null || _draft.idProofPath!.isEmpty) && _draft.idProofBytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(isTamil ? "அடையாளச் சான்றை பதிவேற்றவும்" : "Please upload ID proof")),
+        );
+        return;
+      }
+
       _draft.fatherName = _fatherNameController.text.trim();
       _draft.voterId = _voterIdController.text.trim();
       _draft.aadhaarNumber = _aadhaarController.text.trim();
@@ -84,7 +101,7 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
             onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -100,7 +117,7 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                     color: Colors.black87),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(isTamil ? "அடையாள விவரங்கள்" : "Identity Details",
                 style: const TextStyle(
                     fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
@@ -108,7 +125,7 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
             Text(
                 isTamil ? "உங்களைப் பற்றி மேலும் சொல்லுங்கள்" : "Tell us more about yourself",
                 style: const TextStyle(fontSize: 14, color: Colors.grey)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             CustomStepper(
               currentStep: currentStep,
               steps: steps,
@@ -118,7 +135,7 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                 }
               },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -142,20 +159,32 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                             : null),
                     const SizedBox(height: 20),
                     FormInputField(
+                        controller: _aadhaarController,
+                        label: isTamil ? "ஆதார் எண்" : "Aadhaar Number",
+                        hintText: isTamil ? "12 இலக்க ஆதார் எண்" : "12-digit Aadhaar number",
+                        prefixIcon: Icons.fingerprint,
+                        keyboardType: TextInputType.number,
+                        maxLength: 12),
+                    const SizedBox(height: 20),
+                    FormInputField(
                         controller: _voterIdController,
                         label: isTamil ? "வாக்காளர் அடையாள அட்டை எண்" : "Voter ID Number",
                         hintText: isTamil ? "வாக்காளர் அடையாள எண்ணை உள்ளிடவும்" : "Enter voter ID number",
                         prefixIcon: Icons.how_to_vote),
                     const SizedBox(height: 20),
-                    FormInputField(
-                        controller: _aadhaarController, 
-                        label: isTamil ? "ஆதார் எண்" : "Aadhaar Number", 
-                        hintText: isTamil ? "12 இலக்க ஆதார் எண்" : "12-digit Aadhaar number",
-                        prefixIcon: Icons.fingerprint, 
-                        keyboardType: TextInputType.number, 
-                        maxLength: 12),
-                    const SizedBox(height: 20),
-                    Text(isTamil ? "அடையாளச் சான்றை பதிவேற்றவும் (விருப்பத்தேர்வு)" : "Upload ID Proof (Optional)", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        children: [
+                          TextSpan(text: isTamil ? "அடையாளச் சான்றை பதிவேற்றவும்" : "Upload ID Proof"),
+                          const TextSpan(text: " *", style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: _pickIdProof,
@@ -168,19 +197,14 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: _draft.idProofPath != null
+                          child: _draft.idProofName != null && _draft.idProofName!.isNotEmpty
                               ? Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                       const Icon(Icons.check_circle,
                                           color: Colors.green),
                                       const SizedBox(width: 8),
-                                      Flexible(
-                                          child: Text(_draft.idProofPath!
-                                              .split('/')
-                                              .last
-                                              .split('\\')
-                                              .last, overflow: TextOverflow.ellipsis))
+                                      Flexible(child: Text(_draft.idProofName!, overflow: TextOverflow.ellipsis))
                                     ])
                               : Column(children: [
                                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [

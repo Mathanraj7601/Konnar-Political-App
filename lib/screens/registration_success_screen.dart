@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
+import "package:share_plus/share_plus.dart";
 
 import "../config/app_config.dart";
 import "../providers/language_provider.dart";
@@ -22,6 +23,17 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
       MaterialPageRoute(builder: (_) => const MemberCardScreen()),
       (route) => false,
     );
+  }
+
+  void _shareDetails() {
+    final isTamil = context.read<LanguageProvider>().isTamil;
+    final displayMemberId = widget.memberId.isNotEmpty ? widget.memberId : "A26#MDU0001";
+    final shareText = isTamil
+        ? "நான் ${AppConfig.partyName} இல் உறுப்பினராக வெற்றிகரமாக பதிவு செய்துள்ளேன். எனது உறுப்பினர் எண்: $displayMemberId"
+        : "I have successfully registered as a member of ${AppConfig.partyName}. My Member ID is: $displayMemberId";
+
+    Share.share(shareText,
+        subject: isTamil ? "உறுப்பினர் பதிவு" : "Membership Registration");
   }
 
   @override
@@ -123,10 +135,12 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
 
                 const SizedBox(height: 24),
                 Text(
-                  isTamil ? "உங்கள் பதிவு செய்யப்பட்ட அலைபேசி எண்ணிற்கு SMS உறுதிப்படுத்தல் அனுப்பப்பட்டுள்ளது." : "An SMS confirmation has been sent to your registered mobile number.",
-                  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
-                  textAlign: TextAlign.center,
-                ),
+  isTamil
+    ? "உங்கள் பதிவு வெற்றிகரமாக முடிந்தது."
+    : "Your registration was successful.",
+  style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+  textAlign: TextAlign.center,
+),
                 
                 const SizedBox(height: 40),
                 PrimaryButton(
@@ -136,11 +150,7 @@ class _RegistrationSuccessScreenState extends State<RegistrationSuccessScreen> {
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(isTamil ? "பகிர்தல் திரை திறக்கிறது..." : "Opening share menu...")),
-                    );
-                  },
+                  onPressed: _shareDetails,
                   icon: const Icon(Icons.share_outlined),
                   label: Text(isTamil ? "பகிரவும்" : "Share"),
                   style: OutlinedButton.styleFrom(
