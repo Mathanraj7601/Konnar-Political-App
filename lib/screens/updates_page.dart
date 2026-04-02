@@ -10,105 +10,55 @@ class UpdatesPage extends StatefulWidget {
 }
 
 class _UpdatesPageState extends State<UpdatesPage> {
-  int selectedTab = 0;
 
-  // 🔹 NEWS DATA (EXTENDED)
-  final List<Map<String, dynamic>> newsList = [
-    {
-      "image": "https://images.pexels.com/photos/161251/south-india-temple-161251.jpeg",
-      "title": "Temple Renovation Initiative",
-      "description":
-          "Community-led renovation of historic Konar temple in Madurai successfully completed.",
-      "date": "April 22, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg",
-      "title": "Youth Wing Formation",
-      "description":
-          "Youth wing launched to empower and engage community youth members.",
-      "date": "April 20, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg",
-      "title": "Free Medical Camp",
-      "description":
-          "A free health check-up camp was conducted with specialist doctors.",
-      "date": "April 18, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg",
-      "title": "Scholarship Distribution",
-      "description":
-          "Scholarships distributed to deserving students for higher education.",
-      "date": "April 15, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg",
-      "title": "Women Empowerment Program",
-      "description":
-          "Workshops conducted to support women entrepreneurship and growth.",
-      "date": "April 12, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg",
-      "title": "Cleanliness Drive",
-      "description":
-          "Community volunteers participated in a city-wide cleanliness drive.",
-      "date": "April 10, 2025",
-    },
-    {
-      "image": "https://images.pexels.com/photos/3755755/pexels-photo-3755755.jpeg",
-      "title": "Health Awareness Campaign",
-      "description":
-          "Awareness sessions conducted on preventive healthcare practices.",
-      "date": "April 08, 2025",
-    },
-  ];
-
-  // 🔹 VIDEO DATA (EXTENDED)
+  // 🔹 VIDEO DATA (LOCAL ASSETS)
   final List<Map<String, dynamic>> videoList = [
     {
       "image": "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg",
-      "title": "Community Meeting – Madurai",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-5s.mp4",
+      "title": "Community Event 2026",
+      "video": "assets/videos/IMG_2026.MOV",
       "date": "April 18, 2025",
     },
     {
       "image": "https://images.pexels.com/photos/274506/pexels-photo-274506.jpeg",
-      "title": "Annual Sports Day 2025",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-10s.mp4",
+      "title": "Annual Sports Meet",
+      "video": "assets/videos/IMG_2302.MOV",
       "date": "April 18, 2025",
     },
     {
       "image": "https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg",
       "title": "Temple Festival Highlights",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-15s.mp4",
+      "video": "assets/videos/IMG_2777.MOV",
       "date": "April 15, 2025",
     },
     {
       "image": "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg",
       "title": "Youth Leadership Program",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-20s.mp4",
+      "video": "assets/videos/IMG_7235.MOV",
       "date": "April 12, 2025",
     },
     {
       "image": "https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg",
       "title": "Community Workshop",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-30s.mp4",
+      "video": "assets/videos/IMG_7250.MOV",
       "date": "April 10, 2025",
     },
     {
       "image": "https://images.pexels.com/photos/3755755/pexels-photo-3755755.jpeg",
       "title": "Health Awareness Campaign",
-      "video": "https://samplelib.com/lib/preview/mp4/sample-5mb.mp4",
+      "video": "assets/videos/IMG_7264.MOV",
       "date": "April 08, 2025",
+    },
+    {
+      "image": "https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg",
+      "title": "Special Event Coverage",
+      "video": "assets/videos/InShot_20260401_084848350.mp4",
+      "date": "April 01, 2025",
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    final isNews = selectedTab == 0;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
 
@@ -127,107 +77,86 @@ class _UpdatesPageState extends State<UpdatesPage> {
         centerTitle: true,
       ),
 
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            const SizedBox(height: 16),
 
-          // 🔘 TABS
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Row(
-              children: [
-                _buildTab("News", 0),
-                _buildTab("Videos", 1),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 🔹 LIST
-          Expanded(
-            child: ListView.builder(
+            // VIDEO LIST
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: isNews ? newsList.length : videoList.length,
-              itemBuilder: (context, index) {
-                final item = isNews ? newsList[index] : videoList[index];
+              child: Column(
+                children: videoList.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
 
-                return GestureDetector(
-                  onTap: () {
-                    if (!isNews) {
+                  return GestureDetector(
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => VideoPlayerPage(
-                            videoUrl: item["video"],
-                            title: item["title"],
+                            videoList: videoList,
+                            currentIndex: index,
                           ),
                         ),
                       );
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
 
-                        // 🖼 IMAGE
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(16)),
-                              child: Image.network(
-                                item["image"],
-                                height: 170,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                          // IMAGE
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(16)),
+                                child: Image.network(
+                                  item["image"],
+                                  height: 170,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
 
-                                // ✅ FIX: LOADING
-                                loadingBuilder:
-                                    (context, child, progress) {
-                                  if (progress == null) return child;
-                                  return Container(
-                                    height: 170,
-                                    alignment: Alignment.center,
-                                    child:
-                                        const CircularProgressIndicator(),
-                                  );
-                                },
+                                  loadingBuilder:
+                                      (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return Container(
+                                      height: 170,
+                                      alignment: Alignment.center,
+                                      child:
+                                          const CircularProgressIndicator(),
+                                    );
+                                  },
 
-                                // ✅ FIX: ERROR
-                                errorBuilder:
-                                    (context, error, stackTrace) {
-                                  return Container(
-                                    height: 170,
-                                    color: Colors.grey.shade300,
-                                    alignment: Alignment.center,
-                                    child: const Icon(Icons.image,
-                                        size: 40),
-                                  );
-                                },
+                                  errorBuilder:
+                                      (context, error, stackTrace) {
+                                    return Container(
+                                      height: 170,
+                                      color: Colors.grey.shade300,
+                                      alignment: Alignment.center,
+                                      child: const Icon(Icons.image,
+                                          size: 40),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
 
-                            // ▶ PLAY ICON
-                            if (!isNews)
+                              // PLAY ICON
                               Container(
                                 width: 60,
                                 height: 60,
@@ -241,83 +170,44 @@ class _UpdatesPageState extends State<UpdatesPage> {
                                   color: Color(0xFF1E2A78),
                                 ),
                               ),
-                          ],
-                        ),
+                            ],
+                          ),
 
-                        // 📄 CONTENT
-                        Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item["title"],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-
-                              const SizedBox(height: 6),
-
-                              if (isNews)
+                          // CONTENT
+                          Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
                                 Text(
-                                  item["description"],
+                                  item["title"],
                                   style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 13,
-                                    height: 1.4,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
 
-                              const SizedBox(height: 8),
+                                const SizedBox(height: 8),
 
-                              Text(
-                                item["date"],
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
+                                Text(
+                                  item["date"],
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 🔘 TAB WIDGET
-  Widget _buildTab(String text, int index) {
-    final isSelected = selectedTab == index;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => selectedTab = index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFF1E2A78)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            text,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          ],
         ),
       ),
     );
