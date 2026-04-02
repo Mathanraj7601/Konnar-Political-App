@@ -18,6 +18,8 @@ class RegistrationRequest {
   final String state;
   final String pincode;
   final String verificationToken;
+  final String? profileImagePath;
+  final String? idProofPath;
 
   const RegistrationRequest({
     required this.name,
@@ -37,6 +39,8 @@ class RegistrationRequest {
     required this.state,
     required this.pincode,
     required this.verificationToken,
+    this.profileImagePath,
+    this.idProofPath,
   });
 
   Map<String, dynamic> toJson() {
@@ -58,6 +62,8 @@ class RegistrationRequest {
       "state": state,
       "pincode": pincode,
       "verification_token": verificationToken,
+      if (profileImagePath != null && profileImagePath!.isNotEmpty) "profile_image_path": profileImagePath,
+      if (idProofPath != null && idProofPath!.isNotEmpty) "id_proof_path": idProofPath,
     };
   }
 }

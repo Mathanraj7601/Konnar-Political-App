@@ -50,6 +50,17 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
     
     final authProvider = context.read<AuthProvider>();
 
+    // Check if the user already exists before sending OTP for registration
+    final exists = await authProvider.checkUserExists(widget.draft.mobile);
+    if (exists == true) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isTamil ? "இந்த மொபைல் எண் ஏற்கனவே உள்ளது. தயவுசெய்து உள்நுழையவும்." : "Mobile number already exists. Please login.")),
+      );
+      return;
+    }
+
     // Send OTP to the user's mobile instead of finalizing registration immediately
     final success = await authProvider.sendOtp(widget.draft.mobile);
     
@@ -92,33 +103,33 @@ class _RegistrationStep4ConfirmScreenState extends State<RegistrationStep4Confir
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
+      
+      // --- APP BAR WITH "STEP X OF Y" IN THE ROW ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          isTamil
+              ? "படி ${currentStep + 1} / ${steps.length}"
+              : "Step ${currentStep + 1} of ${steps.length}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
       ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
         child: Column(
           children: [
-            // --- STEP X OF Y TITLE ---
-            Center(
-              child: Text(
-                isTamil
-                    ? "படி ${currentStep + 1} / ${steps.length}"
-                    : "Step ${currentStep + 1} of ${steps.length}",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            
+            // --- HEADER SECTION (Removed duplicate Step Text) ---
             Text(
               isTamil ? "விவரங்களை உறுதிப்படுத்தவும்" : "Confirm Details",
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),

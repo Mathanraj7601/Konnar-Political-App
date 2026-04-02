@@ -7,7 +7,7 @@ import '../models/registration_draft.dart';
 import '../models/registration_request.dart';
 import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
-import 'home_screen.dart';
+import 'member_card_screen.dart';
 import 'registration_screen.dart';
 import 'registration_success_screen.dart';
 
@@ -96,6 +96,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             state: widget.draft!.state ?? 'Tamil Nadu',
             pincode: widget.draft!.pincode!,
             verificationToken: authProvider.registrationVerificationToken!,
+            profileImagePath: widget.draft!.profileImagePath,
+            idProofPath: widget.draft!.idProofPath,
           );
           authProvider.setProfileImagePath(widget.draft!.profileImagePath);
           
@@ -116,7 +118,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           // --- LOGIN FLOW ---
           setState(() => _isVerifying = false);
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            MaterialPageRoute(builder: (_) => const MemberCardScreen()),
             (route) => false,
           );
         } else {

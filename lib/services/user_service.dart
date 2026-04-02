@@ -23,7 +23,7 @@ class UserService {
 
   Future<MemberCard> getMemberCard(String token) async {
     final response = await _apiClient.get("/user/member-card", token: token);
-    final payload = response["memberCard"];
+    final payload = response["memberCard"] ?? response["data"];
 
     if (payload is! Map<String, dynamic>) {
       throw const ApiException(

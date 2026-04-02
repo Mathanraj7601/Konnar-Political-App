@@ -9,11 +9,13 @@ import "package:path_provider/path_provider.dart";
 import "package:provider/provider.dart";
 import "package:qr_flutter/qr_flutter.dart";
 import "package:share_plus/share_plus.dart";
+import "package:intl/intl.dart";
 import "package:gal/gal.dart";
 
 import "../config/app_config.dart";
 import "../providers/auth_provider.dart";
 import "login_screen.dart";
+import '../utils/age_utils.dart';
 
 class MemberCardScreen extends StatefulWidget {
   const MemberCardScreen({super.key});
@@ -131,15 +133,22 @@ class _MemberCardScreenState extends State<MemberCardScreen> {
       );
     }
 
-    final effectiveName = memberCard?.memberName ?? user?.name ?? "Ijju";
-    final effectiveMemberId = memberCard?.memberId ?? user?.memberId ?? "KPP-2026-001001";
+    final effectiveName = memberCard?.memberName ?? user?.name ?? "Loading...";
+    final effectiveMemberId = memberCard?.memberId ?? user?.memberId ?? "Loading...";
     final effectiveMobile = memberCard?.mobileNumber ?? user?.mobile ?? "N/A";
     
-    final effectiveFatherName = "R. Selvapandian"; 
-    final effectiveAge = "23";
-    final effectiveDoj = "01 Jan 2024";
-    final effectiveConstituency = "Kancheepuram";
-    final effectiveDistrict = "Kancheepuram";
+    // Use data from memberCard object, with fallbacks
+    final effectiveFatherName = memberCard?.fatherName ?? "N/A";
+    
+    final int age = memberCard?.dob != null ? calculateAge(memberCard!.dob!) : 0;
+    final effectiveAge = age > 0 ? age.toString() : "N/A";
+    
+    final effectiveDoj = memberCard?.dateOfJoining != null 
+        ? DateFormat('dd MMM yyyy').format(memberCard!.dateOfJoining!) 
+        : "N/A";
+        
+    final effectiveConstituency = memberCard?.constituency ?? "N/A";
+    final effectiveDistrict = memberCard?.district ?? "N/A";
 
     final effectiveProfileImagePath = authProvider.profileImagePath;
     final effectiveProfileImageUrl = memberCard?.profileImageUrl;

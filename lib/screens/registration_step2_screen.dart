@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for formatting
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
@@ -33,7 +34,13 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
     _draft = widget.draft;
     _fatherNameController.text = _draft.fatherName ?? '';
     _voterIdController.text = _draft.voterId ?? '';
-    _aadhaarController.text = _draft.aadhaarNumber ?? '';
+    
+    // Format the Aadhaar number with spaces if it's returning from a future step
+    String initialAadhaar = _draft.aadhaarNumber ?? '';
+    if (initialAadhaar.length == 12 && !initialAadhaar.contains(' ')) {
+      initialAadhaar = '${initialAadhaar.substring(0, 4)} ${initialAadhaar.substring(4, 8)} ${initialAadhaar.substring(8)}';
+    }
+    _aadhaarController.text = initialAadhaar;
   }
 
   @override
@@ -77,7 +84,9 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
 
       _draft.fatherName = _fatherNameController.text.trim();
       _draft.voterId = _voterIdController.text.trim();
-      _draft.aadhaarNumber = _aadhaarController.text.trim();
+      
+      // Save Aadhaar without spaces to the draft model so your backend receives a clean 12-digit string
+      _draft.aadhaarNumber = _aadhaarController.text.replaceAll(' ', '').trim();
 
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => RegistrationStep3Screen(draft: _draft)),
@@ -93,31 +102,33 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      
+      // --- APP BAR WITH "STEP X OF Y" IN THE ROW ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.pop(context)),
+        title: Text(
+          isTamil
+              ? "படி ${currentStep + 1} / ${steps.length}"
+              : "Step ${currentStep + 1} of ${steps.length}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
       ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // --- STEP X OF Y TITLE ---
-            Center(
-              child: Text(
-                isTamil
-                    ? "படி ${currentStep + 1} / ${steps.length}"
-                    : "Step ${currentStep + 1} of ${steps.length}",
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87),
-              ),
-            ),
-            const SizedBox(height: 8),
+            // --- HEADER SECTION (Removed duplicate Step text) ---
             Text(isTamil ? "அடையாள விவரங்கள்" : "Identity Details",
                 style: const TextStyle(
                     fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
@@ -158,20 +169,86 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
                             ? (isTamil ? "தேவை" : "Required")
                             : null),
                     const SizedBox(height: 20),
-                    FormInputField(
-                        controller: _aadhaarController,
-                        label: isTamil ? "ஆதார் எண்" : "Aadhaar Number",
-                        hintText: isTamil ? "12 இலக்க ஆதார் எண்" : "12-digit Aadhaar number",
-                        prefixIcon: Icons.fingerprint,
-                        keyboardType: TextInputType.number,
-                        maxLength: 12),
+                    
+                    // --- AADHAAR FIELD ---
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isTamil ? "ஆதார் எண்" : "Aadhaar Number",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _aadhaarController,
+                          keyboardType: TextInputType.number,
+                          maxLength: 14, // 12 digits + 2 spaces
+                          buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                            final digitCount = _aadhaarController.text.replaceAll(' ', '').length;
+                            return Text(
+                              '$digitCount/12',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            );
+                          },
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
+                            _AadhaarNumberFormatter(),
+                          ],
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Color(0xFF1E2A5D), width: 1.5),
+                            ),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEEF2FF),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(Icons.fingerprint, color: Color(0xFF1E2A5D), size: 20),
+                              ),
+                            ),
+                            hintText: isTamil ? "12 இலக்க ஆதார் எண்" : "12-digit Aadhaar number",
+                          ),
+                          validator: (val) {
+                            final input = val?.replaceAll(' ', '').trim() ?? "";
+                            if (input.isEmpty) return isTamil ? "தேவை" : "Required";
+                            if (!RegExp(r"^\d{12}$").hasMatch(input)) {
+                              return isTamil ? "சரியான எண்ணை உள்ளிடவும்" : "Invalid Number";
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 20),
+                    
                     FormInputField(
                         controller: _voterIdController,
                         label: isTamil ? "வாக்காளர் அடையாள அட்டை எண்" : "Voter ID Number",
                         hintText: isTamil ? "வாக்காளர் அடையாள எண்ணை உள்ளிடவும்" : "Enter voter ID number",
                         prefixIcon: Icons.how_to_vote),
                     const SizedBox(height: 20),
+                    
                     RichText(
                       text: TextSpan(
                         style: const TextStyle(
@@ -248,6 +325,33 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// --- CUSTOM FORMATTER FOR AADHAAR CARD ---
+class _AadhaarNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Remove anything that isn't a digit
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < digitsOnly.length; i++) {
+      buffer.write(digitsOnly[i]);
+      // Add a space after the 4th (index 3) and 8th (index 7) digits
+      if ((i == 3 || i == 7) && i != digitsOnly.length - 1) {
+        buffer.write(' ');
+      }
+    }
+
+    final string = buffer.toString();
+    return TextEditingValue(
+      text: string,
+      selection: TextSelection.collapsed(offset: string.length),
     );
   }
 }

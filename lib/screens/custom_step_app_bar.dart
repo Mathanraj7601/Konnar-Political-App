@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 
 class CustomStepAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
   final int step;
   final int totalSteps;
 
   const CustomStepAppBar({
     super.key,
-    required this.title,
     required this.step,
     required this.totalSteps,
   });
@@ -16,43 +13,33 @@ class CustomStepAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: AppTheme.background,
+      // Use the background color of your screens (looks like off-white/light gray)
+      backgroundColor: const Color(0xFFF8F9FA), 
       elevation: 0,
-      centerTitle: true,
-      iconTheme: const IconThemeData(color: AppTheme.textPrimary),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: AppTheme.textPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
+      centerTitle: true, // Forces the title to be dead center
+      
+      // Explicitly set the back button on the left
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        },
       ),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(4.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: TweenAnimationBuilder<double>(
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-            tween: Tween<double>(
-              begin: (step - 1) / totalSteps,
-              end: step / totalSteps,
-            ),
-            builder: (context, value, _) => ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: value,
-                backgroundColor: Colors.grey.shade200,
-                color: AppTheme.primary,
-              ),
-            ),
-          ),
+
+      // Set the Step tracker as the centered title
+      title: Text(
+        'Step $step of $totalSteps',
+        style: const TextStyle(
+          color: Colors.black87,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
         ),
       ),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 10);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

@@ -2,6 +2,7 @@ import "dart:io";
 import "dart:typed_data";
 import "dart:ui";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:image_picker/image_picker.dart";
 import "package:provider/provider.dart";
 
@@ -68,7 +69,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     // Always populate controllers and state from the draft.
     // This ensures that when we navigate back, the fields show the latest data.
     _nameController = TextEditingController(text: _draft.name);
-    _mobileController = TextEditingController(text: _draft.mobile);
+    
+    String initialMobile = _draft.mobile;
+    if (initialMobile.length == 10 && !initialMobile.contains(' ')) {
+      initialMobile = '${initialMobile.substring(0, 5)} ${initialMobile.substring(5)}';
+    }
+    _mobileController = TextEditingController(text: initialMobile);
     
     if (_draft.dob != null) {
       _selectedDob = _draft.dob;
@@ -135,7 +141,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
   }
 
-  void _next() {
+  Future<void> _next() async {
     final isTamil = context.read<LanguageProvider>().isTamil;
     if (!_formKey.currentState!.validate()) return;
 
@@ -154,9 +160,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     final age = int.tryParse(_ageController.text) ?? 0;
+    final mobile = _mobileController.text.replaceAll(' ', '').trim();
+
+    final authProvider = context.read<AuthProvider>();
+    final exists = await authProvider.checkUserExists(mobile);
+    
+    if (exists == true) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(isTamil ? "இந்த மொபைல் எண் ஏற்கனவே உள்ளது. தயவுசெய்து உள்நுழையவும்." : "Mobile number already exists. Please login.")),
+      );
+      return;
+    }
 
     _draft.name = _nameController.text.trim();
-    _draft.mobile = _mobileController.text.trim();
+    _draft.mobile = mobile;
     _draft.dob = _selectedDob;
     _draft.age = age;
     _draft.gender = _selectedGender;
@@ -233,14 +251,28 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     return Scaffold(
       backgroundColor: _bgOffWhite,
+      
+      // --- APP BAR WITH "STEP X OF Y" IN THE ROW ---
       appBar: AppBar(
         backgroundColor: _bgOffWhite,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        title: Text(
+          isTamil
+              ? "படி ${currentStep + 1} / ${steps.length}"
+              : "Step ${currentStep + 1} of ${steps.length}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
       ),
+      
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
@@ -249,22 +281,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- STEP X OF Y TITLE ---
-                Center(
-                  child: Text(
-                    isTamil
-                        ? "படி ${currentStep + 1} / ${steps.length}"
-                        : "Step ${currentStep + 1} of ${steps.length}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // --- HEADER ---
+                // --- HEADER SECTION (Removed duplicate Step Text) ---
                 Center(
                   child: Column(
                     children: [
@@ -315,7 +332,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // --- PROFILE PHOTO UPLOAD (From Image 2) ---
+                      // --- PROFILE PHOTO UPLOAD ---
                       const Text(
                         "Profile Photo",
                         style: TextStyle(
@@ -444,12 +461,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         TextFormField(
                           controller: _mobileController,
                           keyboardType: TextInputType.number,
-                          maxLength: 10,
+                          maxLength: 11, // Keep at 11 to accommodate 10 digits + 1 space
+                          buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
+                            // Calculate the length by stripping out the spaces
+                            final digitCount = _mobileController.text.replaceAll(' ', '').length;
+                            return Text(
+                              '$digitCount/10',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            );
+                          },
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
+                            _PhoneNumberFormatter(),
+                          ],
                           decoration: _inputDeco(Icons.phone).copyWith(
                             hintText: isTamil ? "10 இலக்க மொபைல் எண்" : "10-digit mobile number",
                           ),
                           validator: (val) {
-                            final input = val?.trim() ?? "";
+                            final input = val?.replaceAll(' ', '').trim() ?? "";
                             if (input.isEmpty) return isTamil ? "தேவை" : "Required";
                             if (!RegExp(r"^\d{10}$").hasMatch(input)) {
                               return isTamil ? "சரியான எண்ணை உள்ளிடவும்" : "Invalid Number";
@@ -632,4 +664,28 @@ class DashedRectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < digitsOnly.length; i++) {
+      buffer.write(digitsOnly[i]);
+      if (i == 4 && i != digitsOnly.length - 1) {
+        buffer.write(' ');
+      }
+    }
+
+    final string = buffer.toString();
+    return TextEditingValue(
+      text: string,
+      selection: TextSelection.collapsed(offset: string.length),
+    );
+  }
 }

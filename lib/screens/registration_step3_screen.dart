@@ -171,33 +171,47 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // Overall app background
+      
+      // --- APP BAR WITH "STEP 3 OF 4" IN THE ROW ---
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+        centerTitle: true, // Centers the title text
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black), 
+          onPressed: () => Navigator.pop(context)
+        ),
+        title: Text(
+          isTamil
+              ? "படி ${currentStep + 1} / ${steps.length}"
+              : "Step ${currentStep + 1} of ${steps.length}",
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.black87,
+          ),
+        ),
       ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Center(
-              child: Text(
-                isTamil
-                    ? "படி ${currentStep + 1} / ${steps.length}"
-                    : "Step ${currentStep + 1} of ${steps.length}",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black87,
-                ),
-              ),
+            // --- HEADER SECTION (No duplicate Step Text here) ---
+            Text(
+              isTamil ? "குடியிருப்பு முகவரி" : "Residential Address", 
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)
             ),
-            const SizedBox(height: 8),
-            Text(isTamil ? "குடியிருப்பு முகவரி" : "Residential Address", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
             const SizedBox(height: 4),
-            Text(isTamil ? "உங்கள் இருப்பிடத்தை நாங்கள் கண்டறிவோம்..." : "We'll auto-detect your location for accu...", style: const TextStyle(fontSize: 14, color: Colors.grey), textAlign: TextAlign.center),
-            const SizedBox(height: 12),
+            Text(
+              isTamil ? "உங்கள் இருப்பிடத்தை நாங்கள் கண்டறிவோம்..." : "We'll auto-detect your location for accu...", 
+              style: const TextStyle(fontSize: 14, color: Colors.grey), 
+              textAlign: TextAlign.center
+            ),
+            const SizedBox(height: 24),
+            
+            // --- VISUAL STEPPER ---
             CustomStepper(
               currentStep: currentStep,
               steps: steps,
@@ -208,7 +222,9 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                 }
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            
+            // --- MAIN FORM CONTAINER ---
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
               child: Form(
@@ -217,69 +233,58 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      
-                      // --- UPDATED MAP/LOCATION CARD ---
+                      // Map Card
                       Container(
                         height: 160,
                         width: double.infinity,
                         clipBehavior: Clip.antiAlias, // Ensures the image respects the border radius
                         decoration: BoxDecoration(
-                          // Using the light grey theme from your image
                           color: const Color(0xFFF6F7F9), 
                           borderRadius: BorderRadius.circular(16),
                           image: DecorationImage(
-                            // Using a generic blurred map as a placeholder
-                            image: const AssetImage('assets/map_bg.png'), // Using a local asset to avoid web CORS issues
+                            image: const AssetImage('assets/map_bg.png'), // Local asset
                             fit: BoxFit.cover,
-                            // Add a slight dark overlay to make foreground elements more readable
                             colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.25),
+                              Colors.black.withOpacity(0.20),
                               BlendMode.darken,
                             ),
                           ),
                         ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Spacer(),
-                            // Centered Red Location Pin
-                            const Icon(
-                              Icons.location_on, 
-                              color: Color(0xFFEA4335), // Google Maps Red
-                              size: 48
+                        child: const Center(
+                          child: Icon(
+                            Icons.location_on, 
+                            color: Color(0xFFEA4335), // Google Maps Red
+                            size: 48
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Location Button (Placed below the map)
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E2A5D), // Dark blue
+                            foregroundColor: const Color(0xFFFFB732), // Yellow text/icon color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
                             ),
-                            const Spacer(),
-                            // Dark Blue Button inside the card
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: 44,
-                                child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1E2A5D), // Dark blue from your design
-                                    foregroundColor: const Color(0xFFFFB732), // Yellow text/icon color
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(22),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  onPressed: _isLocating ? null : _getCurrentLocation,
-                                  icon: _isLocating 
-                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFFFFB732), strokeWidth: 2))
-                                      : const Icon(Icons.near_me, size: 20),
-                                  label: Text(
-                                    _isLocating ? (isTamil ? "கண்டுபிடிக்கிறது..." : "Locating...") : (isTamil ? "தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்" : "Use Current Location"),
-                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                            elevation: 0,
+                          ),
+                          onPressed: _isLocating ? null : _getCurrentLocation,
+                          icon: _isLocating 
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Color(0xFFFFB732), strokeWidth: 2))
+                              : const Icon(Icons.near_me, size: 20),
+                          label: Text(
+                            _isLocating ? (isTamil ? "கண்டுபிடிக்கிறது..." : "Locating...") : (isTamil ? "தற்போதைய இருப்பிடத்தைப் பயன்படுத்தவும்" : "Use Current Location"),
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      // --- END MAP SECTION ---
+                      // --- END MAP/LOCATION SECTION ---
 
                       FormInputField(
                           controller: _streetController, 
