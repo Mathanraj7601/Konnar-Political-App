@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:share_plus/share_plus.dart';
 
 class VideoPlayerPage extends StatefulWidget {
   final List<Map<String, dynamic>> videoList;
@@ -20,9 +20,11 @@ class VideoPlayerPage extends StatefulWidget {
 class _VideoPlayerPageState extends State<VideoPlayerPage> {
   VideoPlayerController? _controller;
   late int _currentVideoIndex;
-  bool _isPlaying = true;
+
+  bool _isInitialized = false;
+  bool _isPlaying = false;
+  bool _isDescriptionExpanded = false;
   bool _isFullScreen = false;
-  bool _isHalfScreen = false;
 
   @override
   void initState() {
@@ -32,37 +34,59 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   void _initializeVideo(int index) {
-    final videoUrl = widget.videoList[index]["video"];
-    
-    // Dispose previous controller if exists
-    if (_controller != null) {
-      _controller!.dispose();
-      _controller = null;
-    }
+    final url = widget.videoList[index]["video"];
 
-    // AUTO DETECT VIDEO TYPE
-    if (videoUrl.startsWith("http")) {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-    } else if (videoUrl.startsWith("assets")) {
-      _controller = VideoPlayerController.asset(videoUrl);
+    _controller?.dispose();
+
+    if (url.startsWith("http")) {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(url));
+    } else if (url.startsWith("assets")) {
+      _controller = VideoPlayerController.asset(url);
     } else {
-      _controller = VideoPlayerController.file(File(videoUrl));
+      _controller = VideoPlayerController.file(File(url));
     }
 
     _controller!.initialize().then((_) {
-      setState(() {});
-      _controller!.play(); // Auto play
-      _isPlaying = true;
+      setState(() => _isInitialized = true);
     });
+  }
 
-    // Listen to video state changes
-    _controller!.addListener(() {
-      if (_controller!.value.isPlaying != _isPlaying) {
-        setState(() {
-          _isPlaying = _controller!.value.isPlaying;
-        });
+  void _togglePlay() {
+    if (!_isInitialized) return;
+
+    setState(() {
+      if (_controller!.value.isPlaying) {
+        _controller!.pause();
+        _isPlaying = false;
+      } else {
+        _controller!.play();
+        _isPlaying = true;
       }
     });
+  }
+
+  void _toggleFullScreen() {
+    setState(() => _isFullScreen = !_isFullScreen);
+  }
+
+  void _playVideo(int index) {
+    setState(() {
+      _currentVideoIndex = index;
+      _isInitialized = false;
+      _isPlaying = false;
+    });
+    _initializeVideo(index);
+  }
+
+  void _shareVideo() {
+    final v = widget.videoList[_currentVideoIndex];
+    Share.share("${v["title"]}\n${v["date"]}");
+  }
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return "$m:$s";
   }
 
   @override
@@ -71,604 +95,280 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     super.dispose();
   }
 
-  void _togglePlay() {
-    if (_controller != null) {
-      setState(() {
-        if (_controller!.value.isPlaying) {
-          _controller!.pause();
-          _isPlaying = false;
-        } else {
-          _controller!.play();
-          _isPlaying = true;
-        }
-      });
-    }
-  }
-
-  void _toggleFullScreen() {
-    setState(() {
-      _isFullScreen = !_isFullScreen;
-      _isHalfScreen = false; // Reset half screen when toggling full screen
-    });
-  }
-
-  void _toggleHalfScreen() {
-    setState(() {
-      _isHalfScreen = !_isHalfScreen;
-      _isFullScreen = false; // Reset full screen when toggling half screen
-    });
-  }
-
-  void _resetScreenSize() {
-    setState(() {
-      _isFullScreen = false;
-      _isHalfScreen = false;
-    });
-  }
-
-  void _playVideo(int index) {
-    if (index != _currentVideoIndex) {
-      setState(() {
-        _currentVideoIndex = index;
-      });
-      _initializeVideo(index);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final video = widget.videoList[_currentVideoIndex];
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: _isFullScreen ? null : AppBar( // Hide app bar in full screen
-        backgroundColor: Colors.black,
-        title: Text(
-          widget.videoList[_currentVideoIndex]["title"],
-          style: const TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          // Screen size controls
-          if (!_isFullScreen)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'fullscreen') {
-                  _toggleFullScreen();
-                } else if (value == 'halfscreen') {
-                  _toggleHalfScreen();
-                } else if (value == 'normal') {
-                  _resetScreenSize();
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'fullscreen',
-                  child: Row(
-                    children: [
-                      Icon(Icons.fullscreen, color: Colors.black),
-                      SizedBox(width: 8),
-                      Text('Full Screen'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'halfscreen',
-                  child: Row(
-                    children: [
-                      Icon(Icons.aspect_ratio, color: Colors.black),
-                      SizedBox(width: 8),
-                      Text('Half Screen'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'normal',
-                  child: Row(
-                    children: [
-                      Icon(Icons.crop_square, color: Colors.black),
-                      SizedBox(width: 8),
-                      Text('Normal'),
-                    ],
-                  ),
-                ),
-              ],
+      appBar: _isFullScreen
+          ? null
+          : AppBar(
+              backgroundColor: Colors.black,
+              iconTheme: const IconThemeData(color: Colors.white),
             ),
-        ],
-      ),
+      body: Column(
+        children: [
+          /// 🎬 VIDEO PLAYER
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Stack(
+              children: [
+                /// VIDEO / THUMBNAIL
+                Positioned.fill(
+                  child: !_isPlaying
+                      ? Image.network(video["image"], fit: BoxFit.cover)
+                      : (_isInitialized
+                          ? VideoPlayer(_controller!)
+                          : const Center(
+                              child: CircularProgressIndicator())),
+                ),
 
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // If width is less than 600, use mobile layout
-          if (constraints.maxWidth < 600) {
-            return _buildMobileLayout(constraints);
-          } else {
-            return _buildDesktopLayout();
-          }
-        },
-      ),
-    );
-  }
+                /// TAP TO PLAY
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: _togglePlay,
+                    child: Container(color: Colors.transparent),
+                  ),
+                ),
 
-  // MOBILE LAYOUT (Vertical) with YouTube-like screen options
-  Widget _buildMobileLayout(BoxConstraints constraints) {
-    double videoHeight = _calculateVideoHeight(constraints);
-    
-    return Column(
-      children: [
-        // MAIN VIDEO PLAYER with responsive height
-        Container(
-          width: double.infinity,
-          height: videoHeight,
-          color: Colors.black,
-          child: _controller != null && _controller!.value.isInitialized
-              ? Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    VideoPlayer(_controller!),
-                    
-                    // PLAY/PAUSE OVERLAY
-                    GestureDetector(
-                      onTap: _togglePlay,
-                      child: Container(
-                        color: Colors.transparent,
-                        child: Icon(
-                          _controller!.value.isPlaying
-                              ? Icons.pause_circle_filled
-                              : Icons.play_circle_filled,
-                          size: 60,
-                          color: Colors.white.withAlpha(170),
+                /// CONTROLS BAR
+                if (_isInitialized)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withOpacity(0.7),
+                            Colors.transparent
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
                         ),
+                      ),
+                      child: Row(
+                        children: [
+                          /// PLAY BUTTON
+                          IconButton(
+                            icon: Icon(
+                              _controller!.value.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: Colors.white,
+                            ),
+                            onPressed: _togglePlay,
+                          ),
+
+                          /// CURRENT TIME
+                          Text(
+                            _formatDuration(
+                                _controller!.value.position),
+                            style:
+                                const TextStyle(color: Colors.white),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          /// PROGRESS BAR
+                          Expanded(
+                            child: VideoProgressIndicator(
+                              _controller!,
+                              allowScrubbing: true,
+                              colors: const VideoProgressColors(
+                                playedColor: Colors.blue,
+                                bufferedColor: Colors.grey,
+                                backgroundColor: Colors.white24,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 8),
+
+                          /// TOTAL TIME
+                          Text(
+                            _formatDuration(
+                                _controller!.value.duration),
+                            style:
+                                const TextStyle(color: Colors.white),
+                          ),
+
+                          /// FULLSCREEN
+                          IconButton(
+                            icon: const Icon(Icons.fullscreen,
+                                color: Colors.white),
+                            onPressed: _toggleFullScreen,
+                          ),
+                        ],
                       ),
                     ),
-
-                    // SCREEN SIZE CONTROLS (Top Right)
-                    if (!_isFullScreen)
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(153),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Full Screen Button
-                              IconButton(
-                                icon: const Icon(Icons.fullscreen, color: Colors.white, size: 20),
-                                onPressed: _toggleFullScreen,
-                                tooltip: 'Full Screen',
-                              ),
-                              // Half Screen Button
-                              IconButton(
-                                icon: const Icon(Icons.aspect_ratio, color: Colors.white, size: 20),
-                                onPressed: _toggleHalfScreen,
-                                tooltip: 'Half Screen',
-                              ),
-                              // Normal Screen Button
-                              if (_isHalfScreen)
-                                IconButton(
-                                  icon: const Icon(Icons.crop_square, color: Colors.white, size: 20),
-                                  onPressed: _resetScreenSize,
-                                  tooltip: 'Normal',
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                    // Exit Full Screen Button
-                    if (_isFullScreen)
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(153),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.fullscreen_exit, color: Colors.white, size: 20),
-                            onPressed: _resetScreenSize,
-                            tooltip: 'Exit Full Screen',
-                          ),
-                        ),
-                      ),
-                  ],
-                )
-              : Container(
-                  color: Colors.black,
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
                   ),
-                ),
-        ),
 
-        // VIDEO INFO BAR (Hide in full screen)
-        if (!_isFullScreen)
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.black,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.videoList[_currentVideoIndex]["title"],
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                /// EXIT FULLSCREEN
+                if (_isFullScreen)
+                  Positioned(
+                    top: 30,
+                    left: 10,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back,
+                          color: Colors.white),
+                      onPressed: _toggleFullScreen,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.videoList[_currentVideoIndex]["date"],
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
               ],
             ),
           ),
 
-        // PLAYLIST SECTION (Hide in full screen)
-        if (!_isFullScreen)
-          Expanded(
-            child: Container(
-              color: const Color(0xFF212121),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          /// HIDE BELOW IN FULLSCREEN
+          if (!_isFullScreen)
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
                 children: [
-                  // PLAYLIST HEADER
-                  const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text(
-                      "Up Next",
-                      style: TextStyle(
+                  /// TITLE
+                  Text(
+                    video["title"],
+                    style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// DATE
+                  Text(
+                    video["date"],
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
+                  const Divider(color: Colors.grey),
+
+                  /// DESCRIPTION TITLE
+                  const Text(
+                    "Description",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  /// DESCRIPTION
+                  Text(
+                    video["description"] ?? 
+                    "Join us for an inspiring community event focused on development and growth. This special gathering brings together people from all walks of life to share experiences and build meaningful connections. Don't miss this opportunity to be part of something meaningful and make a positive impact in our community.",
+                    style: const TextStyle(color: Colors.white70),
+                    maxLines: _isDescriptionExpanded ? null : 3,
+                    overflow: _isDescriptionExpanded
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// READ MORE - Always show
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isDescriptionExpanded = !_isDescriptionExpanded;
+                      });
+                    },
+                    child: Text(
+                      _isDescriptionExpanded
+                          ? "Read less"
+                          : "Read more",
+                      style: const TextStyle(color: Colors.blue),
                     ),
                   ),
 
-                  // PLAYLIST VIDEOS
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: widget.videoList.length,
-                      itemBuilder: (context, index) {
-                        final video = widget.videoList[index];
-                        final isCurrentlyPlaying = index == _currentVideoIndex;
+                  const SizedBox(height: 16),
 
-                        return GestureDetector(
-                          onTap: () => _playVideo(index),
-                          child: Container(
-                            margin: const EdgeInsets.only(
-                              left: 12,
-                              right: 12,
-                              bottom: 6,
-                            ),
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isCurrentlyPlaying
-                                  ? const Color(0xFF323232)
-                                  : const Color(0xFF212121),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
+                  /// SHARE BUTTON ONLY
+                  OutlinedButton.icon(
+                    onPressed: _shareVideo,
+                    icon:
+                        const Icon(Icons.share, color: Colors.white),
+                    label: const Text("Share",
+                        style: TextStyle(color: Colors.white)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.blue),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Divider(color: Colors.grey),
+
+                  const SizedBox(height: 10),
+
+                  /// OTHER VIDEOS
+                  const Text(
+                    "Other Videos",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  ...widget.videoList.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    var v = entry.value;
+
+                    if (index == _currentVideoIndex) {
+                      return const SizedBox();
+                    }
+
+                    return GestureDetector(
+                      onTap: () => _playVideo(index),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
                               children: [
-                                // THUMBNAIL
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Stack(
-                                    children: [
-                                      Image.network(
-                                        video["image"],
-                                        width: 100,
-                                        height: 56,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            width: 100,
-                                            height: 56,
-                                            color: Colors.grey[600],
-                                            child: const Icon(
-                                              Icons.image,
-                                              color: Colors.grey,
-                                              size: 20,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      
-                                      // PLAYING INDICATOR
-                                      if (isCurrentlyPlaying)
-                                        Container(
-                                          width: 100,
-                                          height: 56,
-                                          color: Colors.black.withAlpha(153),
-                                          child: const Icon(
-                                            Icons.play_arrow,
-                                            color: Colors.white,
-                                            size: 20,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
+                                Image.network(
+                                  v["image"],
+                                  width: 120,
+                                  height: 80,
+                                  fit: BoxFit.cover,
                                 ),
-
-                                const SizedBox(width: 8),
-
-                                // VIDEO INFO
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        video["title"],
-                                        style: TextStyle(
-                                          color: isCurrentlyPlaying
-                                              ? const Color(0xFF3EA6FF)
-                                              : Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: isCurrentlyPlaying
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        video["date"],
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                const Icon(Icons.play_arrow,
+                                    color: Colors.white),
                               ],
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  // Calculate video height based on screen size mode
-  double _calculateVideoHeight(BoxConstraints constraints) {
-    if (_isFullScreen) {
-      return constraints.maxHeight; // Full screen height
-    } else if (_isHalfScreen) {
-      return constraints.maxHeight * 0.6; // 60% of screen height
-    } else {
-      // Normal mode - maintain aspect ratio but limit height
-      if (_controller != null && _controller!.value.isInitialized) {
-        final aspectRatio = _controller!.value.aspectRatio;
-        final calculatedHeight = constraints.maxWidth / aspectRatio;
-        // Limit to 40% of screen height in normal mode
-        return math.min(calculatedHeight, constraints.maxHeight * 0.4);
-      }
-      return constraints.maxHeight * 0.3; // Default fallback
-    }
-  }
-
-  // DESKTOP LAYOUT (Horizontal - YouTube Style)
-  Widget _buildDesktopLayout() {
-    return Row(
-      children: [
-        // LEFT SIDE - VIDEO PLAYER
-        Expanded(
-          flex: 2,
-          child: Column(
-            children: [
-              // MAIN VIDEO PLAYER
-              Container(
-                color: Colors.black,
-                child: _controller != null && _controller!.value.isInitialized
-                    ? AspectRatio(
-                        aspectRatio: _controller!.value.aspectRatio,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            VideoPlayer(_controller!),
-                            
-                            // PLAY/PAUSE OVERLAY
-                            GestureDetector(
-                              onTap: _togglePlay,
-                              child: Container(
-                                color: Colors.transparent,
-                                child: Icon(
-                                  _controller!.value.isPlaying
-                                      ? Icons.pause_circle_filled
-                                      : Icons.play_circle_filled,
-                                  size: 60,
-                                  color: Colors.white.withAlpha(170),
-                                ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Text(v["title"],
+                                      style: const TextStyle(
+                                          color: Colors.white)),
+                                  Text(v["date"],
+                                      style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12)),
+                                ],
                               ),
-                            ),
+                            )
                           ],
                         ),
-                      )
-                    : Container(
-                        height: 400,
-                        color: Colors.black,
-                        child: const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        ),
                       ),
+                    );
+                  }).toList(),
+                ],
               ),
-
-              // VIDEO INFO
-              Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.black,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.videoList[_currentVideoIndex]["title"],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.videoList[_currentVideoIndex]["date"],
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // RIGHT SIDE - PLAYLIST
-        Expanded(
-          flex: 1,
-          child: Container(
-            color: const Color(0xFF212121),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // PLAYLIST HEADER
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    "Up Next",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // PLAYLIST VIDEOS
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: widget.videoList.length,
-                    itemBuilder: (context, index) {
-                      final video = widget.videoList[index];
-                      final isCurrentlyPlaying = index == _currentVideoIndex;
-
-                      return GestureDetector(
-                        onTap: () => _playVideo(index),
-                        child: Container(
-                          margin: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 8,
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: isCurrentlyPlaying
-                                ? const Color(0xFF323232)
-                                : const Color(0xFF212121),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              // THUMBNAIL
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: Stack(
-                                  children: [
-                                    Image.network(
-                                      video["image"],
-                                      width: 120,
-                                      height: 68,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          width: 120,
-                                          height: 68,
-                                          color: Colors.grey[600],
-                                          child: const Icon(
-                                            Icons.image,
-                                            color: Colors.grey,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    
-                                    // PLAYING INDICATOR
-                                    if (isCurrentlyPlaying)
-                                      Container(
-                                        width: 120,
-                                        height: 68,
-                                        color: Colors.black.withAlpha(153),
-                                        child: const Icon(
-                                          Icons.play_arrow,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              // VIDEO INFO
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      video["title"],
-                                      style: TextStyle(
-                                        color: isCurrentlyPlaying
-                                            ? const Color(0xFF3EA6FF)
-                                            : Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: isCurrentlyPlaying
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      video["date"],
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+            )
+        ],
+      ),
     );
   }
 }
