@@ -1,0 +1,530 @@
+{
+	"info": {
+		"name": "Konnar Political App API",
+		"description": "Complete API collection for the Konnar Political App Backend (Auth, Members, Admin Users, Announcements, Events, Media, Notifications).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Check User Exists",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/check-user",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "check-user"]
+						}
+					}
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "send-otp"]
+						}
+					}
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						}
+					}
+				},
+				{
+					"name": "Register Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Arjun Kumar\",\n  \"mobile\": \"9876543210\",\n  \"dob\": \"2001-03-15\",\n  \"gender\": \"Male\",\n  \"blood_group\": \"O+\",\n  \"father_name\": \"R. Sekar\",\n  \"voter_id\": \"DEF1234567\",\n  \"aadhaar_number\": \"123456789012\",\n  \"street\": \"123 Main Street\",\n  \"door_number\": \"45A\",\n  \"village\": \"Kanchipuram\",\n  \"union\": \"Kanchipuram Union\",\n  \"district\": \"Kanchipuram\",\n  \"state\": \"Tamil Nadu\",\n  \"pincode\": \"631501\",\n  \"taluk\": \"Kanchipuram Taluk\",\n  \"verification_token\": \"mock-verify-9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. App Users & Member Cards",
+			"item": [
+				{
+					"name": "Get Member Card",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer mock-auth-9876543210"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user/member-card",
+							"host": ["{{base_url}}"],
+							"path": ["user", "member-card"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Members CRUD (Admin)",
+			"item": [
+				{
+					"name": "List Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/members?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "members"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Edit Member",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"full_name\": \"Arjun Updated\",\n  \"mobile_number\": \"9876543210\",\n  \"district\": \"Chennai\",\n  \"constituency\": \"Chennai South\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/members/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "members", ":id"],
+							"variable": [{ "key": "id", "value": "MEMBER_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Member",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/members/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "members", ":id"],
+							"variable": [{ "key": "id", "value": "MEMBER_ID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Admin Users CRUD",
+			"item": [
+				{
+					"name": "List Admin Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Admin User",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile_number\": \"9988776655\",\n  \"role\": \"ADMIN\",\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users"]
+						}
+					}
+				},
+				{
+					"name": "Update Admin User",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"USER\",\n  \"status\": \"BANNED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":id"],
+							"variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Toggle Active Status",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/:id/status",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":id", "status"],
+							"variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Admin User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "users", ":id"],
+							"variable": [{ "key": "id", "value": "USER_ID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Announcements CRUD",
+			"item": [
+				{
+					"name": "List Announcements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/announcements?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "announcements"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Announcement",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Meeting Reminder\",\n  \"description\": \"Join us for the monthly gathering.\",\n  \"date\": \"MAY 25, 2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/announcements",
+							"host": ["{{base_url}}"],
+							"path": ["api", "announcements"]
+						}
+					}
+				},
+				{
+					"name": "Edit Announcement",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Meeting Updated\",\n  \"description\": \"The venue has changed.\",\n  \"date\": \"MAY 26, 2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/announcements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "announcements", ":id"],
+							"variable": [{ "key": "id", "value": "ANNOUNCEMENT_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Announcement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/announcements/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "announcements", ":id"],
+							"variable": [{ "key": "id", "value": "ANNOUNCEMENT_ID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Events CRUD",
+			"item": [
+				{
+					"name": "List Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/events?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "events"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Event",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Annual Party Convention\",\n  \"subtitle\": \"State Level Meet\",\n  \"description\": \"Discussing the future manifesto.\",\n  \"event_date\": \"2024-12-15T10:00:00.000Z\",\n  \"location_name\": \"Chennai Central Hall\",\n  \"location_url\": \"https://maps.google.com\",\n  \"cover_image_url\": \"https://example.com/image.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/events",
+							"host": ["{{base_url}}"],
+							"path": ["api", "events"]
+						}
+					}
+				},
+				{
+					"name": "Edit Event",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Annual Party Convention - Rescheduled\",\n  \"subtitle\": \"State Level Meet\",\n  \"description\": \"Date changed.\",\n  \"event_date\": \"2024-12-20T10:00:00.000Z\",\n  \"location_name\": \"Chennai Central Hall\",\n  \"location_url\": \"https://maps.google.com\",\n  \"cover_image_url\": \"https://example.com/image.jpg\",\n  \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/events/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "events", ":id"],
+							"variable": [{ "key": "id", "value": "EVENT_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Event",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/events/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "events", ":id"],
+							"variable": [{ "key": "id", "value": "EVENT_ID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Notifications CRUD",
+			"item": [
+				{
+					"name": "List Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notifications?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Notification",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"System Update\",\n  \"subtitle\": \"Version 2.0 is live\",\n  \"body\": \"Please restart your app to enjoy the latest features.\",\n  \"user_id\": null\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/notifications",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications"]
+						}
+					}
+				},
+				{
+					"name": "Edit Notification",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"System Update (Urgent)\",\n  \"subtitle\": \"Version 2.1 is live\",\n  \"body\": \"Critical bug fixes included.\",\n  \"is_read\": false,\n  \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/notifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", ":id"],
+							"variable": [{ "key": "id", "value": "NOTIFICATION_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/notifications/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", ":id"],
+							"variable": [{ "key": "id", "value": "NOTIFICATION_ID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Media Gallery CRUD",
+			"item": [
+				{
+					"name": "List Media",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/media?page=1&limit=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Media",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"media_type\": \"YOUTUBE_LINK\",\n  \"url\": \"https://youtube.com/watch?v=example\",\n  \"thumbnail_url\": \"https://img.youtube.com/vi/example/0.jpg\",\n  \"title\": \"Campaign Video 2024\",\n  \"subtitle\": \"Watch our recent rally highlights.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/media",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media"]
+						}
+					}
+				},
+				{
+					"name": "Edit Media",
+					"request": {
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"media_type\": \"YOUTUBE_LINK\",\n  \"url\": \"https://youtube.com/watch?v=example\",\n  \"thumbnail_url\": \"https://img.youtube.com/vi/example/0.jpg\",\n  \"title\": \"Campaign Video 2024 (Updated)\",\n  \"subtitle\": \"Watch our recent rally highlights.\",\n  \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/media/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", ":id"],
+							"variable": [{ "key": "id", "value": "MEDIA_ID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Media",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/media/:id",
+							"host": ["{{base_url}}"],
+							"path": ["api", "media", ":id"],
+							"variable": [{ "key": "id", "value": "MEDIA_ID_HERE" }]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:4000",
+			"type": "string"
+		}
+	]
+}
