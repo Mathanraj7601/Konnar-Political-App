@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import '../services/navigation_service.dart';
 
@@ -11,69 +13,98 @@ class AnnouncementsPage extends StatefulWidget {
 class _AnnouncementsPageState extends State<AnnouncementsPage> {
   // Track expanded state for each announcement
   final List<bool> _expandedStates = [];
+  List<dynamic> _announcements = [];
+  bool _isLoading = true;
+
+  // Replace localhost with your backend IP (e.g., 10.0.2.2 for Android Emulator)
+  final String apiUrl = 'http://localhost:4000/api/announcements';
 
   @override
   void initState() {
     super.initState();
-    // Initialize all announcements as not expanded
-    _expandedStates.addAll(List.filled(_announcements.length, false));
+    _fetchAnnouncements();
   }
 
-  static const List<Map<String, dynamic>> _announcements = [
-    {
-      'date': 'APR 20, 2024',
-      'title': 'Meeting Reminder',
-      'description': 'Community meeting this Sunday at 5 PM. Don\'t miss it!',
-    },
-    {
-      'date': 'APR 18, 2024',
-      'title': 'New Event Planned',
-      'description': 'We have planned a blood donation camp next Saturday. Volunteer if you can!',
-    },
-    {
-      'date': 'APR 15, 2024',
-      'title': 'Election Campaign Kickoff',
-      'description': 'Join us for the election campaign kickoff this Friday. Let\'s work together!',
-    },
-    {
-      'date': 'APR 10, 2024',
-      'title': 'System Maintenance',
-      'description': 'Scheduled maintenance this weekend. Services may be temporarily unavailable.',
-    },
+  Future<void> _fetchAnnouncements() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _announcements = data['data'];
+          _expandedStates.clear();
+          _expandedStates.addAll(List.filled(_announcements.length, false));
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching announcements: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
-    // 🔥 NEW MOCK DATA BELOW
+  Future<void> _deleteAnnouncement(String id) async {
+    try {
+      final response = await http.delete(Uri.parse('$apiUrl/$id'));
+      if (response.statusCode == 200) {
+        _fetchAnnouncements();
+      }
+    } catch (e) {
+      debugPrint("Error deleting announcement: $e");
+    }
+  }
 
-    {
-      'date': 'APR 05, 2024',
-      'title': 'Health Camp',
-      'description': 'Free medical checkup camp organized at community hall from 9 AM to 2 PM.',
-    },
-    {
-      'date': 'APR 01, 2024',
-      'title': 'Membership Drive',
-      'description': 'New membership registration drive has started. Invite your friends and family to join.',
-    },
-    {
-      'date': 'MAR 28, 2024',
-      'title': 'Volunteer Meeting',
-      'description': 'All volunteers are requested to attend the meeting regarding upcoming events.',
-    },
-    {
-      'date': 'MAR 25, 2024',
-      'title': 'Training Session',
-      'description': 'Leadership training session will be conducted this Saturday at 4 PM.',
-    },
-    {
-      'date': 'MAR 20, 2024',
-      'title': 'Community Cleanup',
-      'description': 'Join us in cleaning the local park this Sunday morning. Let\'s keep our area clean.',
-    },
-    {
-      'date': 'MAR 15, 2024',
-      'title': 'Festival Celebration',
-      'description': 'Celebrate the upcoming festival with us. Food, music, and fun activities included!',
-    },
-  ];
+  void _showFormDialog({Map<String, dynamic>? announcement}) {
+    final isEditing = announcement != null;
+    final titleCtrl = TextEditingController(text: isEditing ? announcement['title'] : '');
+    final descCtrl = TextEditingController(text: isEditing ? announcement['description'] : '');
+    final dateCtrl = TextEditingController(text: isEditing ? announcement['date'] : 'MAY 01, 2024');
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(isEditing ? 'Edit Announcement' : 'New Announcement'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
+              TextField(controller: dateCtrl, decoration: const InputDecoration(labelText: 'Date (e.g. MAY 01, 2024)')),
+              TextField(controller: descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'Description')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final payload = json.encode({
+                'title': titleCtrl.text,
+                'description': descCtrl.text,
+                'date': dateCtrl.text,
+              });
+              
+              try {
+                if (isEditing) {
+                  await http.put(Uri.parse('$apiUrl/${announcement['id']}'),
+                      headers: {'Content-Type': 'application/json'}, body: payload);
+                } else {
+                  await http.post(Uri.parse(apiUrl),
+                      headers: {'Content-Type': 'application/json'}, body: payload);
+                }
+                if (mounted) Navigator.pop(ctx);
+                _fetchAnnouncements();
+              } catch (e) {
+                debugPrint("Error saving announcement: $e");
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,11 +152,18 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       ),
 
       // 🔹 BODY
-      body: ListView.builder(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _announcements.isEmpty 
+              ? const Center(child: Text("No Announcements yet."))
+              : RefreshIndicator(
+                  onRefresh: _fetchAnnouncements,
+                  child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _announcements.length,
         itemBuilder: (context, index) {
           final item = _announcements[index];
+          final desc = (item['description'] ?? '').toString();
 
           return Container(
             margin: const EdgeInsets.only(bottom: 14),
@@ -153,7 +191,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                     children: [
                       // DATE
                       Text(
-                        item['date'],
+                        item['date'] ?? 'Unknown Date',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
@@ -165,7 +203,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
 
                       // TITLE
                       Text(
-                        item['title'],
+                        item['title'] ?? 'No Title',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -178,8 +216,8 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                       // DESCRIPTION
                       Text(
                         _expandedStates[index]
-                            ? item['description']
-                            : '${item['description'].substring(0, item['description'].length > 50 ? 50 : item['description'].length)}${item['description'].length > 50 ? '...' : ''}',
+                            ? desc
+                            : '${desc.substring(0, desc.length > 50 ? 50 : desc.length)}${desc.length > 50 ? '...' : ''}',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.grey,
@@ -225,6 +263,7 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           );
         },
       ),
+              ),
     );
   }
 }

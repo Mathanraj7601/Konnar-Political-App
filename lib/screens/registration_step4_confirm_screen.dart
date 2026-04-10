@@ -4,13 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../config/app_config.dart';
 import '../models/registration_draft.dart';
-import '../models/registration_request.dart';
 import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
 import '../utils/age_utils.dart';
 import '../widgets/custom_stepper.dart';
-import 'login_screen.dart';
-import 'registration_success_screen.dart';
 import 'otp_verification_screen.dart';
 
 class RegistrationStep4ConfirmScreen extends StatefulWidget {

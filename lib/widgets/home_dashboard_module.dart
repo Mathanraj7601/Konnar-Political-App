@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class HomeDashboardModule extends StatefulWidget {
   final String profileName;
   final String profileDistrict;
+  final String memberId;
+  final String? profileImageUrl;
   final Function(int)? onNavigate;
   final Function()? onBack;
 
@@ -10,6 +12,8 @@ class HomeDashboardModule extends StatefulWidget {
     super.key,
     required this.profileName,
     required this.profileDistrict,
+    required this.memberId,
+    this.profileImageUrl,
     this.onNavigate,
     this.onBack,
   });
@@ -69,10 +73,10 @@ class _HomeDashboardModuleState extends State<HomeDashboardModule> {
                     padding: const EdgeInsets.fromLTRB(20, 65, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          'Vanakkam, Arjun Kumar 👋',
-                          style: TextStyle(
+                          'Vanakkam, ${widget.profileName} 👋',
+                          style: const TextStyle(
                             fontSize: 24,
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -80,8 +84,8 @@ class _HomeDashboardModuleState extends State<HomeDashboardModule> {
                         ),
                         SizedBox(height: 6),
                         Text(
-                          'Member ID: A26#MDU0001',
-                          style: TextStyle(
+                          'Member ID: ${widget.memberId}',
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                           ),
@@ -98,6 +102,7 @@ class _HomeDashboardModuleState extends State<HomeDashboardModule> {
                     child: _buildProfileCard(
                       widget.profileName,
                       widget.profileDistrict,
+                      widget.profileImageUrl,
                     ),
                   ),
                 ],
@@ -123,7 +128,7 @@ class _HomeDashboardModuleState extends State<HomeDashboardModule> {
   }
 
   // 🧑 PROFILE CARD
-  Widget _buildProfileCard(String name, String district) {
+  Widget _buildProfileCard(String name, String district, String? imageUrl) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
@@ -142,11 +147,11 @@ class _HomeDashboardModuleState extends State<HomeDashboardModule> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 45,
-                backgroundImage: NetworkImage(
-                  'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
-                ),
+                backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                    ? NetworkImage(imageUrl)
+                    : const AssetImage('assets/images/default_profile.png') as ImageProvider,
               ),
               Positioned(
                 bottom: 0,

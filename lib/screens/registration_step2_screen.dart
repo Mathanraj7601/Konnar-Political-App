@@ -58,7 +58,7 @@ class _RegistrationStep2ScreenState extends State<RegistrationStep2Screen> {
       withData: true, // Ensures bytes are loaded, crucial for web support
     );
 
-    if (result != null && result.files.single != null) {
+    if (result != null) {
       final file = result.files.single;
       setState(() {
         if (!kIsWeb) {

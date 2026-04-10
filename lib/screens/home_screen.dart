@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/home_dashboard_module.dart';
 import 'announcements_page.dart';
 import 'updates_page.dart' as screens;
 import 'profile_page.dart';
 import '../services/navigation_service.dart';
+import '../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -96,9 +98,15 @@ class _HomeDashboardTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.currentUser;
+    final memberCard = authProvider.memberCard;
+
     return HomeDashboardModule(
-      profileName: 'Arjun Kumar',
-      profileDistrict: 'Chennai District',
+      profileName: memberCard?.memberName ?? user?.name ?? 'Member',
+      profileDistrict: memberCard?.district ?? 'Tamil Nadu',
+      memberId: memberCard?.memberId ?? user?.memberId ?? '',
+      profileImageUrl: memberCard?.profileImageUrl,
       onNavigate: (index) {
         final homeScreenState = context.findAncestorStateOfType<HomeScreenState>();
         homeScreenState?.changeTabIndex(index);
@@ -106,6 +114,3 @@ class _HomeDashboardTab extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -344,7 +344,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           // District Dropdown
                           _buildLabel(isTamil ? "மாவட்டம்" : "District"),
                           DropdownButtonFormField<String>(
-                            value: _selectedDistrict,
+                            initialValue: _selectedDistrict,
                             isExpanded: true,
                             icon: Icon(
                               Icons.keyboard_arrow_down,
@@ -381,7 +381,7 @@ class _AddressInfoScreenState extends State<AddressInfoScreen> {
                           // Constituency Dropdown
                           _buildLabel(isTamil ? "தொகுதி" : "Constituency"),
                           DropdownButtonFormField<String>(
-                            value:
+                            initialValue:
                                 constituencyOptions.contains(
                                   _selectedConstituency,
                                 )

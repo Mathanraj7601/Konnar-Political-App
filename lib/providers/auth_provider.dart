@@ -221,6 +221,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    if (!isAuthenticated) return false;
+
+    _setLoading(true);
+    _errorMessage = null;
+
+    try {
+      // Assuming _userService.updateProfile exists. You will need to implement it in UserService.
+      // final updatedUser = await _userService.updateProfile(_authToken!, data);
+      // _currentUser = updatedUser;
+      await fetchMemberCard(); // Refresh local data after update
+      return true;
+    } on ApiException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (_) {
+      _errorMessage = "Failed to update profile. Please try again.";
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> logout() async {
     _authToken = null;
     _registrationVerificationToken = null;

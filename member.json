@@ -1,0 +1,277 @@
+{
+	"info": {
+		"name": "Konnar Political App API",
+		"description": "Complete API collection for the Konnar Political App Backend.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication & Users",
+			"item": [
+				{
+					"name": "1. Check User Exists",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/check-user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"check-user"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/send-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"send-otp"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"verify-otp"
+							]
+						}
+					}
+				},
+				{
+					"name": "4. Register Member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Arjun Kumar\",\n  \"mobile\": \"9876543210\",\n  \"dob\": \"2001-03-15\",\n  \"gender\": \"Male\",\n  \"blood_group\": \"O+\",\n  \"father_name\": \"R. Sekar\",\n  \"voter_id\": \"DEF1234567\",\n  \"aadhaar_number\": \"123456789012\",\n  \"street\": \"123 Main Street\",\n  \"door_number\": \"45A\",\n  \"village\": \"Kanchipuram\",\n  \"union\": \"Kanchipuram Union\",\n  \"district\": \"Kanchipuram\",\n  \"state\": \"Tamil Nadu\",\n  \"pincode\": \"631501\",\n  \"taluk\": \"Kanchipuram Taluk\",\n  \"verification_token\": \"mock-verify-9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "5. Get Member Card",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer mock-auth-9876543210",
+								"description": "Mock Token received after login or registration"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user/member-card",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"member-card"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Members Directory",
+			"item": [
+				{
+					"name": "1. List All Members",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"members"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Announcements",
+			"item": [
+				{
+					"name": "1. List Announcements",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/announcements",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"announcements"
+							]
+						}
+					}
+				},
+				{
+					"name": "2. Create Announcement",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Community Meetup\",\n    \"description\": \"Join us for the monthly gathering this Saturday at the local hall.\",\n    \"date\": \"MAY 25, 2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/announcements",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"announcements"
+							]
+						}
+					}
+				},
+				{
+					"name": "3. Edit Announcement",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Community Meetup (Updated)\",\n    \"description\": \"The venue has changed to the central park. See you there!\",\n    \"date\": \"MAY 26, 2024\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/announcements/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"announcements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_ANNOUNCEMENT_ID_HERE",
+									"description": "UUID of the announcement to update"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "4. Delete Announcement",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/announcements/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"announcements",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "ENTER_ANNOUNCEMENT_ID_HERE",
+									"description": "UUID of the announcement to delete"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://192.168.99.77:4000",
+			"type": "string"
+		}
+	]
+}

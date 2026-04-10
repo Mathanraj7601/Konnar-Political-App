@@ -363,7 +363,7 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             )

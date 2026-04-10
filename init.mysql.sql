@@ -19,7 +19,7 @@ CREATE TABLE users (
 -- Note: voter_id and aadhaar_number should be encrypted at the application layer before storing.
 CREATE TABLE member_profiles (
     id CHAR(36) PRIMARY KEY,
-    user_id CHAR(36) UNIQUE NOT NULL,
+    user_id CHAR(36) UNIQUE,
     member_id_string VARCHAR(50) UNIQUE NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     father_name VARCHAR(255) NOT NULL,

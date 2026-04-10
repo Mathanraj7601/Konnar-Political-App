@@ -218,7 +218,9 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
               onStepTapped: (index) {
                 if (index < currentStep) {
                   int pops = currentStep - index;
-                  for (int i = 0; i < pops; i++) Navigator.of(context).pop();
+                  for (int i = 0; i < pops; i++) {
+                    Navigator.of(context).pop();
+                  }
                 }
               },
             ),
@@ -331,7 +333,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                       ),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
-                        value: TamilNaduElectoralData.districts.contains(_draft.district)
+                        initialValue: TamilNaduElectoralData.districts.contains(_draft.district)
                             ? _draft.district
                             : null,
                         isExpanded: true,
@@ -353,7 +355,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                       ),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
-                        value: constituencyOptions.contains(_draft.constituency)
+                        initialValue: constituencyOptions.contains(_draft.constituency)
                             ? _draft.constituency
                             : null,
                         isExpanded: true,
@@ -372,7 +374,7 @@ class _RegistrationStep3ScreenState extends State<RegistrationStep3Screen> {
                       ),
                       const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
-                        value: _indianStates.contains(_draft.state) 
+                        initialValue: _indianStates.contains(_draft.state) 
                             ? _draft.state 
                             : null,
                         isExpanded: true,

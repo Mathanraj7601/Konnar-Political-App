@@ -7,7 +7,7 @@ import '../models/registration_draft.dart';
 import '../models/registration_request.dart';
 import '../providers/auth_provider.dart';
 import '../providers/language_provider.dart';
-import 'member_card_screen.dart';
+import 'home_screen.dart';
 import 'registration_screen.dart';
 import 'registration_success_screen.dart';
 
@@ -118,7 +118,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           // --- LOGIN FLOW ---
           setState(() => _isVerifying = false);
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const MemberCardScreen()),
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
             (route) => false,
           );
         } else {

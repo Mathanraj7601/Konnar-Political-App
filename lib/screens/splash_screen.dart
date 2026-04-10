@@ -1,4 +1,3 @@
-import "dart:async";
 
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
@@ -6,7 +5,6 @@ import "package:provider/provider.dart";
 import "../config/app_config.dart";
 import "../providers/language_provider.dart";
 import "../theme/app_theme.dart";
-import "../widgets/alternating_word_text.dart";
 import "login_screen.dart";
 
 class SplashScreen extends StatefulWidget {

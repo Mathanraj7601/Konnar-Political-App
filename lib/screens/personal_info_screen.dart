@@ -488,7 +488,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               isTamil ? "பாலினம்" : "Gender",
                               DropdownButtonFormField<String>(
                                 isExpanded: true,
-                                value: _selectedGender,
+                                initialValue: _selectedGender,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                                 decoration: _inputDeco(Icons.person_outline).copyWith(hintText: isTamil ? "தேர்ந்தெடு" : "Select"),
                                 items: _genders.map((String value) {
@@ -508,7 +508,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                               isTamil ? "இரத்த வகை" : "Blood Group",
                               DropdownButtonFormField<String>(
                                 isExpanded: true,
-                                value: _selectedBloodGroup,
+                                initialValue: _selectedBloodGroup,
                                 icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                                 decoration: _inputDeco(null).copyWith(hintText: isTamil ? "தேர்ந்தெடு" : "Select"),
                                 items: _bloodGroups.map((String value) {

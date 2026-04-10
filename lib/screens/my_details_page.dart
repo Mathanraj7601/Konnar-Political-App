@@ -225,13 +225,20 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'edit_profile_page.dart'; // ✅ IMPORT ADDED
+import '../providers/auth_provider.dart';
 
 class MyDetailsPage extends StatelessWidget {
   const MyDetailsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.currentUser;
+    final memberCard = authProvider.memberCard;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FB),
 
@@ -283,22 +290,23 @@ class MyDetailsPage extends StatelessWidget {
               decoration: _card(),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 32,
-                    backgroundImage: NetworkImage(
-                      "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-                    ),
+                    backgroundImage: memberCard?.profileImageUrl != null
+                        ? NetworkImage(memberCard!.profileImageUrl!)
+                        : null,
+                    child: memberCard?.profileImageUrl == null ? const Icon(Icons.person, size: 32) : null,
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Arjun Kumar",
-                          style: TextStyle(
+                    children: [
+                      Text(memberCard?.memberName ?? user?.name ?? "N/A",
+                          style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 16)),
-                      SizedBox(height: 4),
-                      Text("+91 9876543210",
-                          style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 4),
+                      Text("+91 ${memberCard?.mobileNumber ?? user?.mobile ?? "N/A"}",
+                          style: const TextStyle(color: Colors.grey)),
                     ],
                   )
                 ],
@@ -309,15 +317,15 @@ class MyDetailsPage extends StatelessWidget {
 
             // 🔲 DETAILS CARD
             _cardSection([
-              _row(Icons.person, "Full Name", "Arjun Kumar"),
+              _row(Icons.person, "Full Name", memberCard?.memberName ?? user?.name ?? "N/A"),
               _divider(),
-              _row(Icons.phone, "Mobile Number", "9876543210"),
+              _row(Icons.phone, "Mobile Number", memberCard?.mobileNumber ?? user?.mobile ?? "N/A"),
               _divider(),
-              _row(Icons.calendar_today, "Date of Birth", "15 Mar 2001"),
+              _row(Icons.calendar_today, "Date of Birth", memberCard?.dob != null ? DateFormat('dd MMM yyyy').format(memberCard!.dob!) : "N/A"),
               _divider(),
-              _row(Icons.people, "Gender", "Male"),
+              _row(Icons.people, "Gender", memberCard?.gender ?? "N/A"),
               _divider(),
-              _row(Icons.person_outline, "Father / Guardian Name", "R. Sekar"),
+              _row(Icons.person_outline, "Father / Guardian Name", memberCard?.fatherName ?? "N/A"),
             ]),
 
             const SizedBox(height: 16),
@@ -326,15 +334,15 @@ class MyDetailsPage extends StatelessWidget {
             _cardSection([
               _sectionTitle(Icons.location_on, "Address"),
               _divider(),
-              _row(Icons.location_on, "Street", "New Street, Chennai"),
+              _row(Icons.location_on, "Street", "N/A"), // Assuming you have these in UserProfile
               _divider(),
-              _row(Icons.home, "Door No", "123"),
+              _row(Icons.home, "Door No", "N/A"),
               _divider(),
-              _row(Icons.location_city, "City / Village", "Kanchipuram"),
+              _row(Icons.location_city, "City / Village", "N/A"),
               _divider(),
-              _row(Icons.map, "District", "Menai"),
+              _row(Icons.map, "District", memberCard?.district ?? "N/A"),
               _divider(),
-              _row(Icons.place, "Constituency", "Kanchipuram"),
+              _row(Icons.place, "Constituency", memberCard?.constituency ?? "N/A"),
             ]),
 
             const SizedBox(height: 24),

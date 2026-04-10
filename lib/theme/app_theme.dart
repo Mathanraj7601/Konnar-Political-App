@@ -20,8 +20,7 @@ class AppTheme {
         secondary: accent, // Used for accent elements
         onSecondary: textPrimary,
         surface: card, // Card background
-        onSurface: textPrimary, // Main text color
-        background: background,
+        onSurface: textPrimary,
         error: Colors.red.shade700,
       );
 
